@@ -1,0 +1,44 @@
+baseURL: "https://kozlov.ski/"
+title: Kozlov.ski
+languageCode: en-us
+paginate: 5
+theme: PaperMod
+
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+menu:
+  main:
+    - identifier: blog
+      name: blog
+      url: "/blog"
+      weight: 10
+    - identifier: edu
+      name: edu
+      url: "/edu"
+      weight: 20
+    - identifier: about
+      name: about
+      url: "/about"
+      weight: 30
+
+taxonomies:
+  category: categories
+  tag: tags
+
+params:
+#  ShowShareButtons: true
+  ShowReadingTime: true
+  ShowToc: true
+  ShowCodeCopyButtons: true
+  comments: false
+  profileMode:
+    enabled: true
+    title: Data Things
+    subtitle: Little subtitle here
