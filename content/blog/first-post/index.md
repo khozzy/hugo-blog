@@ -1,12 +1,14 @@
 ---
-title: "My First Post"
+title: "Data Transformation with DuckDb"
+author: Norbert
 date: 2023-04-02T08:13:42+02:00
 draft: true
 categories:
 - Data Engineering
 tags:
 - Development
-slug: lolo
+- Data Engineering
+slug: data-transformation-with-duckdb
 ---
 
 ## Introduction

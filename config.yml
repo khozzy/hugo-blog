@@ -37,10 +37,13 @@ taxonomies:
 params:
 #  ShowShareButtons: true
   ShowReadingTime: true
-  ShowToc: true
+  ShowToc: false
   ShowCodeCopyButtons: true
   comments: false
   profileMode:
     enabled: true
     title: Building Bridges
     subtitle: Connecting Data, People, and Systems for Better Decision-Making
+    imageUrl: /kozlovski-logo.png
+    imageWidth: 240 # custom size
+    imageHeight: 240 # custom size
