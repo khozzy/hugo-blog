@@ -25,9 +25,9 @@ menu:
       name: edu
       url: "/edu"
       weight: 20
-    - identifier: about
-      name: about
-      url: "/about"
+    - identifier: me
+      name: me
+      url: "/me"
       weight: 30
 
 taxonomies:
