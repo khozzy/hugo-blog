@@ -27,7 +27,7 @@ By the end of this post, you will be well-equipped to leverage the power of Duck
 - periodic data transformation might be tricky?
 
 ## Scenario
-In this case I assume that we would like to move data from MongoDb into Redshift cluster.
+In this case I assume that we would like to move data between distinct formats (like from MongoDb into Redshift cluster).
 
 ![](duckdb1.png)
 

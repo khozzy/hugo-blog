@@ -10,7 +10,7 @@ I'm an Assistant Professor at the [Wroclaw University of Science and Technology]
 All courses follow pragmatic teaching strategy. Students, equipped with learning materials are encouraged to master the skill by performing real-world assignments.
 
 ### Summer 2022/2023
-- `AREK00018P` Bazy Danych (P) ([slides](https://docs.google.com/presentation/d/1OtRuCMMQLqXK4Ka3_Ij7xojkFvRE_iz598YBlTl1wLc/edit?usp=sharing))
+- `AREK00018P` Bazy Danych (P) ([slides](https://docs.google.com/presentation/d/1OtRuCMMQLqXK4Ka3_Ij7xojkFvRE_iz598YBlTl1wLc/edit?usp=sharing), [syllabus](https://drive.google.com/file/d/1jjqJeA1stAP6OWlJU9iSZ0J49BaNdzje/view?usp=sharing)) 
 - Hurtownie Danych i Big Data (W, L)
 
 ## Contact Information

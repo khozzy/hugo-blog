@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ site.Language }}" dir="{{ .Language.LanguageDirection | default " auto" }}">
+
+<head>
+    {{- partial "head.html" . }}
+</head>
+
+<body class="
+{{- if (or (ne .Kind `page` ) (eq .Layout `archives`) (eq .Layout `search`)) -}}
+{{- print " list" -}}
+{{- end -}}
+{{- if eq site.Params.defaultTheme `dark` -}}
+{{- print " dark" }}
+{{- end -}}
+" id="top">
+{{- partialCached "header.html" . .Page -}}
+<main class="main">
+    {{- block "main" . }}{{ end }}
+</main>
+{{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
+
+<!--     ADDED START     -->
+<div style="padding-top: 10px;">
+    <script async>(function (s, u, m, o, j, v) {
+        j = u.createElement(m);
+        v = u.getElementsByTagName(m)[0];
+        j.async = 1;
+        j.src = o;
+        j.dataset.sumoSiteId = 'f5f2e64bfb15132d7c11f0e5230e22bafb66a0a91efe59643e512943449fe1b0';
+        v.parentNode.insertBefore(j, v)
+    })(window, document, 'script', '//load.sumo.com/');</script>
+</div>
+<!--     ADDED END     -->
+
+</body>
+
+</html>
