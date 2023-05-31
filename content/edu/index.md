@@ -4,17 +4,18 @@ author: Norbert
 ---
 I'm an Assistant Professor at the [Wroclaw University of Science and Technology](https://pwr.edu.pl/en/), [Department of Computer Engineering](https://dce.pwr.edu.pl/en/). My research interest include reinforcement learning algorithms and recommender systems. 
 
-[Introduce yourself and your qualifications as an academic tutor. Explain your expertise and your teaching philosophy.]
+[//]: # ([Introduce yourself and your qualifications as an academic tutor. Explain your expertise and your teaching philosophy.])
 
 ## Courses
-All courses follow pragmatic teaching strategy. Students, equipped with learning materials are encouraged to master the skill by performing real-world assignments.
+> All courses follow pragmatic teaching strategy. Students, equipped with learning materials are encouraged to master the skill by performing real-world assignments.
 
 ### Summer 2022/2023
-- `AREK00018P` Bazy Danych (P) ([slides](https://docs.google.com/presentation/d/1OtRuCMMQLqXK4Ka3_Ij7xojkFvRE_iz598YBlTl1wLc/edit?usp=sharing), [syllabus](https://drive.google.com/file/d/1jjqJeA1stAP6OWlJU9iSZ0J49BaNdzje/view?usp=sharing)) 
-- Hurtownie Danych i Big Data (W, L)
+- `AREK00018` Bazy Danych (P) ([slides](https://docs.google.com/presentation/d/1OtRuCMMQLqXK4Ka3_Ij7xojkFvRE_iz598YBlTl1wLc/edit?usp=sharing), [syllabus](https://drive.google.com/file/d/1jjqJeA1stAP6OWlJU9iSZ0J49BaNdzje/view?usp=sharing)) 
+- `INEU00217` [Hurtownie Danych i Big Data (W, L)](https://khozzy.notion.site/khozzy/Hurtownie-Danych-i-Big-Data-a446a92e7ac546f285bca3c3140cd75a)
 
 ## Contact Information
-For Students, please first send the inquires at `norbert.kozlowski[at]pwr.edu.pl` ✉️. If needed we will set up a [Zoom call](https://pwr-edu.zoom.us/j/6576164212) ☎️ or meet in person.
+- ✉️ `norbert.kozlowski[at]pwr.edu.pl` 
+- ☎️ [Zoom call](https://pwr-edu.zoom.us/j/6576164212)
 
 
 ## Publications

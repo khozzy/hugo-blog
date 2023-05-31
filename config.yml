@@ -17,18 +17,18 @@ minify:
 
 menu:
   main:
-    - identifier: blog
-      name: blog
-      url: "/blog"
-      weight: 10
+#    - identifier: blog
+#      name: blog
+#      url: "/blog"
+#      weight: 10
     - identifier: edu
       name: edu
       url: "/edu"
       weight: 20
-    - identifier: me
-      name: me
-      url: "/me"
-      weight: 30
+#    - identifier: me
+#      name: me
+#      url: "/me"
+#      weight: 30
 
 taxonomies:
   category: categories
