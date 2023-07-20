@@ -17,10 +17,10 @@ minify:
 
 menu:
   main:
-#    - identifier: blog
-#      name: blog
-#      url: "/blog"
-#      weight: 10
+    - identifier: blog
+      name: blog
+      url: "/blog"
+      weight: 10
     - identifier: edu
       name: edu
       url: "/edu"
@@ -40,6 +40,8 @@ params:
   ShowToc: false
   ShowCodeCopyButtons: true
   comments: false
+  defaultTheme: light
+  disableThemeToggle: true
   profileMode:
     enabled: true
     title: Building Bridges
