@@ -1,5 +1,5 @@
 ---
-title: "Affordable data collection at scale"
+title: "50 Cent Data Ingestion"
 date: 2023-07-02T12:05:02+02:00
 draft: true
 mermaid: true
@@ -9,25 +9,26 @@ index: 1
 > This article is part of ["Practical Data Platform on Amazon AWS 📊"]({{< ref "/blog/data-platform-aws" >}}) series.
 
 
-### Why it matters?
-- solution suits both structured and unstructured data, which is desired for both analytical as engineering workloads,
-- it works both with real-time streaming and batch data processing,
-- it's scalable and cost-efficient, with proper configuration both storage and processing tiers are decoupled and highly optimized,
-- adherence to regulatory and compliance requirements for data protection and safeguarding sensitive information.
+### 🚀 Why it matters?
+- The solution is equipped to handle both structured and unstructured data, a crucial aspect for both analytical and engineering tasks.
+- It is capable of facilitating both real-time streaming and batch data processing.
+- With proper configuration, it proves to be cost-efficient and scalable; both storage and processing tiers are decoupled and highly optimized.
+- The solution adheres to regulatory and compliance requirements, ensuring data protection and the safeguarding of sensitive information.
 
 ### What you will learn?
-- how certain AWS services play together to provide a serverless data platform,
-- no-code approach to deliver infrastructure capable of collecting, transforming and querying underlying data almost free of charge,
-- practical difference between representing files in JSON and Parquet format
-- how to query streaming data in quasi real-time using SQL language
+- How specific AWS services synergize to provide a serverless data platform.
+- A no-code approach to establishing an infrastructure capable of collecting, transforming, and querying underlying data with minimal cost implications.
+- The practical distinctions between representing files in JSON and Parquet formats.
+- Techniques for querying streaming data in quasi real-time using the SQL language.
+
 ---
 
 ## Story background
-Imagine a new bio-hacking startup. You as an owner are obviously interested in monitoring user behaviour, discovering insights and calculating relevant metrics satisfying investors scrutiny.
+Imagine being the owner of a cutting-edge bio-hacking startup. Naturally, your focus lies in meticulously monitoring user behavior, uncovering invaluable insights, and computing pertinent metrics that stand up to the scrutiny of potential investors.
 
-Since the first release of app, when the telemetry process is still young, you decided to keep track of three basic facts - `anonymous app visit`, `account registration` and `measurement record` (meaning that the user logs some of his medical data for further analysis).  
+Since the initial release of your app, during the early stages of the telemetry process, you made the strategic decision to meticulously track three fundamental events: the occurrence of an `anonymous_app_visit`, the completion of an `account_registration`, and the creation of a `measurement_record` (which signifies users inputting their medical data for subsequent analysis). 
 
-We expect an exponential user growth in near future and therefore are bracing for solid, scalable and secure mechanism for data collection. To accelerate the development progress we generated a set of user sessions as a Markov Decision Process, where each state has a certain transition probability. 
+Anticipating an exponential surge in user growth in the near future, we are actively preparing a robust, scalable, and highly secure mechanism for efficient data collection. To expedite the development progress, a set of user sessions was modeled as a _Markov Decision Process_, where each state carries a specific transition probability.
 
 {{< mermaid >}}
 ---
@@ -54,39 +55,39 @@ stateDiagram-v2
     interest_lost --> [*]
 {{< /mermaid >}}
 
-A synthetic dataset contains 100k distinct user sessions consisting of one or more events that we are going to use in this exercise ([source code](xxx)). To make things event more realistic we intentionally included some duplicated events.
+In preparation, we have compiled a synthetic dataset comprising 100,000 distinct user sessions, each encompassing one or more events. This dataset will be utilized in the exercises ahead ([source code](xxx)). To emulate real-world scenarios, intentional inclusion of duplicated events adds an extra layer of authenticity.
 
 ## Layman's system architecture
-The first approach might involve creating a dedicated service process exposing HTTP collector endpoint, performing initial data processing and pushing it downstream for storage (database or file system).
+In the initial approach, our strategy involves creating a dedicated service process that exposes an HTTP collector endpoint. This process performs the initial data processing and subsequently transmits the processed data downstream for storage, either in a database or a file system.
 
-![Naive Approach Diagram](../images/naive-approach.png)
+{{< figure src="../images/naive-approach.png" caption="Naive Approach System Architecture." >}}
 
-This design would work, but it has a few serious downsides:
-- scalability issues (provisioned resources might not handle excess traffic),
-- maintenance burden (each new proprietary component increases the system's complexity)
-- wheel reinvention (handle exceptions and communication with other components)
+While this design could be functional, it comes with several notable drawbacks:
+- **Scalability Challenges**: The allocated resources might struggle to manage high levels of incoming traffic.
+- **Maintenance Complexities**: Introducing each new proprietary component adds to the overall system complexity and maintenance workload.
+- **Reinventing the Wheel**: There's a risk of duplicating efforts by independently handling exceptional cases and communication with other system components.
 
-We don't want to spend extra engineering resources on developing and maintaining such solution. Let's skip to the desired proposal.
+We understand the importance of optimizing our engineering resources and avoiding unnecessary upkeep. That's why we're excited to present a more refined proposal that addresses these concerns.
 
 ## Native components of Amazon AWS
 
 To accomplish the goal we put the following AWS services in our crosshairs:
-- [Kinesis Data Firehose](https://docs.aws.amazon.com/firehose/latest/dev/basic-deliver.html) service for securely ingesting and storing incoming payload,
-- [S3](https://aws.amazon.com/s3/) and [Glue](https://aws.amazon.com/glue/) as a storage layer and logical data catalogue,
-- [Athena](https://aws.amazon.com/athena/) as a query engine allowing us to access the underlying data with declarative semantics.
+- The [Kinesis Data Firehose](https://docs.aws.amazon.com/firehose/latest/dev/basic-deliver.html) service: This allows us to securely ingest and store incoming payloads.
+- [S3](https://aws.amazon.com/s3/) and [Glue](https://aws.amazon.com/glue/): These form the storage layer and logical data catalog, ensuring efficient data management.
+- [Athena](https://aws.amazon.com/athena/): As a query engine, Athena enables us to access underlying data using declarative semantics.
 
-> **Note about data security**
+> **🚨 Attention: Data Security 🚨**
 > 
-> Since we are dealing with medical records we need to adhere to strict regulations regarding sensitive data. Possible law infringes or data breaches might be disastrous for our company.
+> Given our engagement with medical records, we must uphold rigorous regulations pertaining to sensitive data. Potential legal violations or data breaches could have severe consequences for our company. 
 > 
-> By encrypting data _at-rest_ and _in-transit_, we can meet regulatory and compliance requirements for data protection and safeguard sensitive information.
-> 
-> Cryptographic features of Amazon AWS are designed to meet various compliance requirements, including GDPR, HIPAA, and PCI DSS. By undergoing regular audits and certifications to validate its security practices and compliance with industry standards.
+> By implementing data encryption measures for both data at rest and data in transit, we can effectively fulfill regulatory and compliance prerequisites for data protection, thus ensuring the safety of sensitive information.
+>
+> We have the opportunity to utilize the cryptographic capabilities offered by Amazon AWS, which have been specifically designed to fulfill diverse compliance requirements such as GDPR, HIPAA, and PCI DSS. Amazon AWS undergoes regular audits and certifications to validate its security practices and demonstrate its adherence to industry standards.
 
 ### Storing data as JSON
-Kinesis Firehose works by exposing an endpoint consuming events. It collects them and buffers for a predefined time (or amount of data). When the thresholds are met, it dumps a batch of data to predefined location, which in our case is S3.
+Kinesis Firehose operates by exposing an endpoint to consume events, subsequently gathering and buffering them for a predetermined duration or data volume. Once these thresholds are reached, it efficiently deposits a batch of data into a predefined location. In our specific scenario, this location is none other than Amazon S3.
 
-In the first example we will focus on storing data in native format - as JSON objects. 
+For the initial illustration, our emphasis will be on the storage of data in its native form - as JSON objects.
 
 ```terraform
 resource "aws_kinesis_firehose_delivery_stream" "json_firehose_stream" {
@@ -134,38 +135,35 @@ resource "aws_kinesis_firehose_delivery_stream" "json_firehose_stream" {
 
 ```
 
-By looking at the Terraform resource declaration there are some non-trivial things going on here already. Let's start from the top:
+When examining the Terraform resource declaration, we can observe several intricate aspects in play. Let's begin from the top:
 
-We are utilizing the _server side encryption_ feature, which means that our data will be automatically encrypted at-rest using the AWS owned keys. It's also possible to use our own cryptographic keys, here but we would like to leverage AWS's compliance certifications and ensure your data meets the necessary regulatory requirements.
+We are making use of the _server-side encryption_ feature. This implies that our data will be automatically encrypted at rest using AWS-owned keys. While it's also possible to use our own cryptographic keys, we prefer to capitalize on AWS's compliance certifications, ensuring that your data meets the necessary regulatory requirements.
 
-Next we are configuring the S3 sink. Notice the _dynamic partitioning_ allowing us to process contents of each incoming objects and depending on it's attribute determine the desired storage path. We leverage it to construct the Hive-like file path structure that will enable us the "_predicate projection_" feature boosting query effectiveness later. By design, we bucket events by tuple of name and processing date.
+Moving on, we are configuring the S3 sink. Notably, the implementation involves _dynamic partitioning_, which allows us to process the contents of each incoming object. Depending on its attributes, we determine the desired storage path. We utilize this technique to construct a Hive-like file path structure. This structure facilitates the utilization of the "_predicate projection_" feature, which significantly enhances query effectiveness at a later stage. As part of the design, we categorize events by a tuple of name and processing date.
 
 ```
 s3://<bucket>/events_raw/json/name=<event_name>/d=<etl_date>
 ```
 
-Notice, that the date in path (`d=` prefix), stands for the "message processing timestamp" (not the event generation timestamp). This is a deliberate decision, facilitating future incremental data processing.
+Please take note that the date in the path (prefixed with `d=`) represents the "message processing timestamp" rather than the event generation timestamp. This deliberate choice aims to facilitate future incremental data processing.
 
-> Pay attention to the total amount of partitions within a batch (combinations of parameters composing an object path). When this count exceeds the account [quotas](https://docs.aws.amazon.com/firehose/latest/dev/limits.html), Kinesis Firehose will yield the _"The number of active partitions has exceeded the configured limit"_ error. 
+> It's crucial to monitor the total number of partitions within a batch, which are combinations of parameters forming an object path. If this count exceeds the account [quotas](https://docs.aws.amazon.com/firehose/latest/dev/limits.html), Kinesis Firehose will generate the _"The number of active partitions has exceeded the configured limit"_ error.
 
-Next we utilize the [_data processors_](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-kinesisfirehose-deliverystream-processor.html) to transform and process streaming data before delivering it to the destination. In this case each incoming object is processed by `MetadataExtractionQuery` processor extracting specified parameters from message payload. Those might be later used to build the object path dynamically.
+Subsequently, we make use of [_data processors_](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-kinesisfirehose-deliverystream-processor.html) to transform and process streaming data before sending it to the destination. In this scenario, each incoming object undergoes processing by the `MetadataExtractionQuery` processor, which extracts specified parameters from the message payload. These parameters might subsequently be employed to dynamically construct the object path.
 
-[//]: # (END)
-
-> **Firehose object delimiters for text payloads**
+> **Delimiters for text payloads in Kinesis Firehose**
 > 
-> Mind the way producer emits the events. By default, Kinesis Data Firehose buffers incoming payload by concatenating them, without applying any delimiter. So, for a series of incoming JSON messages, the file dropped on S3 might have the following structure
+> Pay close attention to the way the producer emits events. By default, Kinesis Data Firehose buffers incoming payloads by concatenating them without applying any delimiters. Consequently, for a series of incoming JSON messages, the file dropped on S3 might exhibit the following structure:
 > ```
 > {...}{...}{...}
 > ```
 >
-> This is tricky because the stored file does not meet the requirements for the properly formatted JSON file and might impact downstream processes. Tools like AWS Athena will continue to operate, but will give the incorrect results, which might be tricky to spot at first. In past there were workaround including creating a custom Lambda functions adding delimiters to records, but now this task is as simple as configuring the delivery stream properly with `AppendDelimiterToRecords` _data processor_.
+> This situation is tricky because the stored file does not meet the requirements for a properly formatted JSON file, which could impact downstream processes. Although tools like AWS Athena will continue to operate, they may produce incorrect results that could be challenging to identify initially. In the past, workarounds involved creating custom Lambda functions to add delimiters to records. However, now this task is as simple as configuring the delivery stream properly with the `AppendDelimiterToRecords` data processor.
 
+### Efficient Data Storage with Parquet Format
+Let's proceed to create a secondary Kinesis Firehose delivery configuration, closely resembling the JSON setup mentioned earlier. The primary distinction here lies in our utilization of the _"Record format conversion"_ feature, facilitating seamless real-time data transformation from JSON to the optimized Parquet format.
 
-### Storing data in Parquet format
-Let's create a second Kinesis Firehose delivery, which will be very similar to the JSON one described above. The main difference is that we are utilizing the _"Record format conversion"_ feature enabling real-time data conversion between formats (in this case JSON to Parquet).
-
-Notice the `parquet_ser_de` [output serializer configuration](https://docs.aws.amazon.com/firehose/latest/APIReference/API_ParquetSerDe.html) block allowing to specify things like the compression or the HDFS block size. However, to make the comparison more fair we will retain the default settings.
+Observe the configuration block for `parquet_ser_de` [output serializer configuration](https://docs.aws.amazon.com/firehose/latest/APIReference/API_ParquetSerDe.html), which offers the flexibility to define parameters such as compression techniques and HDFS block size. For the sake of a more equitable comparison, we will, however, retain the default settings.
 
 ```terraform
 resource "aws_kinesis_firehose_delivery_stream" "parquet_firehose_stream" {
@@ -197,14 +195,14 @@ resource "aws_kinesis_firehose_delivery_stream" "parquet_firehose_stream" {
 }
 ```
 
-This declaration also requires us to specify the schema for the underlying data, which will be defined in subsequent section.
+This declaration also necessitates that we specify the schema for the underlying data, which will be defined in the subsequent section.
 
 ## Data ingestion
-Now that the Kinesis Delivery Streams are ready, let's put some data there. Having our synthetic dataset generated, we will transfer it in batches using the [`put_record_batch`](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/firehose/client/put_record_batch.html) API operation to each stream separately ([source code](...)).
+With the Kinesis Delivery Streams now prepared, it's time to populate them with data. Once our synthetic dataset is generated, we will transfer it in batches using the [`put_record_batch`](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/firehose/client/put_record_batch.html) API operation. This transfer will be done separately for each stream. You can find the [source code](...) for this process here.
 
-The dataset itself contains 700k+ raw events storing 165 MB.
+The dataset itself comprises over 700,000 raw events, amounting to a total storage of 165 MB.
 
-We want to have initial sneak-peak on how the data is stored and the overall S3 bucket stats.
+Our aim is to gain an initial sneak peek into how the data is stored and to gather an overview of the statistics for the S3 bucket as a whole.
 
 ```bash
 # JSON sink bucket stats
@@ -221,7 +219,7 @@ Total Size: 44.1 MiB
 $ aws s3 ls s3://<bucket>/events_raw/parquet/ --recursive --human-readable --summarize
 
 # ...
-Total Objects: 15
+Total Objects: 20
 Total Size: 39.5 MiB
 ```
 
@@ -240,12 +238,12 @@ aws s3 cp s3://<bucket>/events_raw/json/name=anonymous_visited/d=2023-07-31/<fil
 {"name": "anonymous_visited", "tstamp": "2021-07-25 19:55:18.000000", "payload": "{\"dvce_os\": \"Android 2.3.4\", \"session_id\": \"itAqBfmzNBaLAlydARtE\"}", "payload_md5": "0005d027655753217b46305bdc40e035"}
 ```
 
-Both streams managed to reduce size almost 4 times due to data compression chosen. Parquet is still slightly more efficient because of internal binary format representation.
+Both streams have successfully reduced their sizes by almost 4 times, thanks to the chosen data compression method. Notably, Parquet format exhibits slightly superior efficiency due to its internal binary format representation.
 
-## Querying data
-Since the streaming data is now being stored in S3 in regular time interval, let's move to the actual data analysis. We leverage AWS Glue service to provide a logical representation of the data structure and AWS Athena as a distributed compute engine.
+## Data Querying
+With the streaming data being consistently stored in Amazon S3 at regular time intervals, we can now delve into the core of data analysis. Our approach involves harnessing the capabilities of AWS Glue, which offers a sophisticated logical portrayal of the data's structure. Additionally, we employ AWS Athena, a distributed computing engine.
 
-Let's start with declaring resources for two AWS Glue tables (`events_json` and `events_parquet`).
+To initiate the process, we commence by defining the necessary resources for two  AWS Glue tables: `events_json` and `events_parquet`.
 
 ```terraform
 resource "aws_glue_catalog_table" "events_json" {
@@ -327,30 +325,62 @@ resource "aws_glue_catalog_table" "events_parquet" {
 }
 ```
 
-We need to deliberately mention each data column within our data as well as partition keys that constitute a path to object (used for the later _"predicate pushdown"_ optimization). We also set the `EXTERNAL` property, indicating that the table metadata is stored inside AWS Glue Data Catalog but the data resides in external data source (S3 in this case).
+[//]: # (LOL END, Rewrite this section to be grammatically correct, acting as a data engineering expert targeting prospects for the software development company:)
 
-![AWG Glue tables](../images/aws_glue_tables.png)
+We need to deliberately mention each data column with»in our data as well as partition keys that constitute a path to object (used for the later _"predicate pushdown"_ optimization). We also set the `EXTERNAL` property, indicating that the table metadata is stored inside AWS Glue Data Catalog but the data resides in external data source (S3 in this case).
 
-Glue also enables more automatic way of discovering and registering tables based on the underlying by using Glue Crawlers. However, we prefer to have more control about the process, therefore declare things manually. 
+{{< figure src="../images/aws_glue_tables.png" caption="Created tables in AWS Glue web console." >}}
 
-- Athena can read compressed and encrypted files
+Glue also enables more automatic way of discovering and registering tables based on the underlying by using _Glue Crawlers_. However, we prefer to have more control about the process, therefore declare things manually. 
 
-Before querying the table, partitions metadata need to be refreshed. Make it happen with executing either Athena query:
-- `MSCK REPAIR TABLE sensors_json;` to automatically discover the partition structure,
-- or manually for each directory `ALTER TABLE sensors_json ADD PARTITION (sensor_id="...", dt="...") LOCATION "s3://..."` 
+> **Pro-tip**: sometimes changes to AWS Glue tables are not propagated correctly. In case of weird behaviour, it's advised to remove the table and recreate it.
 
+Now, when we have everything in place let's try to query to run some queries in Athena. Interestingly, when you try to sneak-peak into the table you will see no results at this stage. That's the reason that the existing partitions are not registered in the Glue metastore. There are at least two ways to solve it:
 
-### Storing data as Parquet files
+1. `MSCK REPAIR TABLE <table_name>;` to automatically discover the recursive partition structure in given location,
+2. or manually for each directory `ALTER TABLE <table_name> ADD PARTITION (event_name="...", d="...") LOCATION "s3://..."` 
 
+This action shall be repeated whenever a new partition becomes present.
 
-In case of the first query Athena is utilizing the Parquet's _"projection pushdown"_ capability allowing it to scan only relevant columns. In this case only `measure` is considered, since `sensor_id` is a partition key. Because Athena's pricing model is a function of the data scanned, that has a direct implication on the final AWS bill.
+{{< figure src="../images/events_json_select.png" caption="Structure of the `events_json` table. Notice that partitions appear as a table's columns." >}}
 
+Now, pretend that we are interested in aggregated view of anonymous user sessions in June 2023. The corresponding SQL query might look as follows:
 
-> It's important to note that while Amazon S3 managed keys provide a secure and convenient solution for encryption, some organizations may have specific requirements or regulations that necessitate the use of customer-managed keys (SSE-KMS). Customer-managed keys offer additional control and ownership over encryption keys but require more management overhead.
-> 
+```sql
+WITH
+    junes_anonymous_visits AS (
+        SELECT *
+        FROM kozlovski.events_json
+        WHERE name = 'anonymous_visited' 
+            AND DATE_TRUNC('month', tstamp) = date('2023-06-01')
+    ),
+    extracted AS (
+        SELECT DISTINCT
+            date_trunc('day', tstamp) AS day,
+            json_extract_scalar(payload, '$.session_id') AS session_id
+        FROM junes_anonymous_visits
+    ),
+    groupped AS (
+        SELECT
+            day,
+            COUNT(*)
+        FROM extracted
+        GROUP BY 1
+    )
+SELECT * FROM groupped ORDER BY 1;
+```
 
-## Cost analysis
-The pessimistic [AWS costs estimations](https://calculator.aws) for running the following examples are less than a dollar and are broken down below. The most significant part belongs to AWS Athena, but the assumption was that there are 100 full scan queries (not very optimal) daily for a month and no caching is used.  
+Long story short, we can leverage the declarative SQL syntax alongside with proprietary functions (like parsing JSON objects) to model and query the underlying data. Moreover, Athena transiently handles compress and encrypted data.
+
+Let's execute the query above using two created tables as a source and observe the metadata.
+
+{{< figure src="../images/athena_json.png" caption="8.18 MB of data scanned when using the `events_json` table." >}}
+{{< figure src="../images/athena_parquet.png" caption="4.19 MB of data scanned when using the `events_parquet` table." >}}
+
+In both cases we see that the amount of data scanned is significantly less that the total data stored on S3 buckets. That is caused by the _predicate projection_ feature, deciding what is the location of the objects - in this case only `anonymous_visited` partition is investigated (located in own subdirectory structure). Utilization of Parquet format is even more efficient by leveraging the _predicate pushdown_ scanning only the relevant portions of file (containing columns of interest). Since Athena's pricing model is a function of the data scanned, that has a direct implication on the final AWS bill.
+
+## Cost estimation
+The pessimistic [AWS costs estimations](https://calculator.aws) for running the following examples are less than a dollar and are broken down below. The most significant part belongs to AWS Athena, but the assumption was that there are 100 full scan queries (not very optimal) daily for a month and no caching mechanisms were considered.  
 
 | **Service**           | **Input (monthly)**         | **Cost**  |
 |-----------------------|-----------------------------|-----------|
@@ -361,15 +391,16 @@ The pessimistic [AWS costs estimations](https://calculator.aws) for running the 
 |                       |                             | **$0.83** |
 
 ## Closing thoughts
-We saw that AWS Kinesis Data Firehose provides a surprisingly simple mechanism for scalable data storage. By utilizing the _"dynamic partitioning"_ we can leverage of the _"predicate pushdown"_ by physically organizing rows into directories.
+We saw that AWS Kinesis Data Firehose provides a surprisingly simple mechanism for scalable data ingestion. By utilizing the _"dynamic partitioning"_ we can leverage of the _"predicate pushdown"_ by physically organizing rows into directories.  Then, by enabling the _"Record format conversion"_ feature, we transformed data into as Parquet files in-flight. This allows us to take the next advantage of the _"projection pushdown"_ feature - only file's blocks containing relevant data was scanned.
 
-Then, we enabled the _"Record format conversion"_ feature, transforming data into as Parquet files. This allows us to take the next advantage of the _"projection pushdown"_ feature - only file's blocks containing relevant data was scanned.
+While the presented solution is a great first step it has serious drawbacks:
 
-Presented solution is still not perfect:
-- significant amount of small files created in each directory (result of setting the buffering window),
-- data is partitioned by the processing timestamp (`dt`), but it would make more sense to use the `event_time` from the payload instead,
-- Hive partitions as columns (https://iceberg.apache.org/docs/latest/partitioning/#icebergs-hidden-partitioning)
-- Only data query capabilities
+1. Parquet files are most efficient when the file size oscillates around 64-128MB. That might be achieved by increasing the Kinesis Firehose buffering window, but increases solution latency. Currently, the file size depends on data velocity, hence it's very probable that a lot of small files are created providing additional computation overhead.
+2. Data analysis are required to be aware of data partitioning scheme (physical data layout) to execute efficient queries.
+3. We have very limited set of DML operations (no updates, nor deletes) and lacking mechanism to restrict access to the data
+
+We will investigate ways to address these concerns in next posts.
 
 ---
-The code for reproduction is free and available [here](https://github.com/khozzy/aws-data-lake/tree/master)
+
+The code for reproduction is free of charge and available [here](https://github.com/khozzy/aws-data-lake/tree/master). Need some help? Contact us!
