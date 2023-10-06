@@ -23,7 +23,7 @@ menu:
       weight: 10
     - identifier: edu
       name: edu
-      url: "/edu"
+      url: "https://khozzy.notion.site/PWr-Dydaktyka-2a32a04938a44bab8a4d3f6c6d04e92b?pvs=4"
       weight: 20
 #    - identifier: me
 #      name: me
