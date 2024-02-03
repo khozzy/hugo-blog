@@ -1,21 +1,20 @@
 ---
-title: "50 Cent Data Ingestion"
-date: 2023-07-02T12:05:02+02:00
-draft: true
-mermaid: true
-index: 1
+title: "From Ingestion to Insight: Creating a Budget-Friendly Data Lake with AWS"
+date: 2024-02-02T12:05:02+02:00
+author: Norbert
+draft: false
+tags:
+- Data Engineering
+- Cloud Computing
 ---
 
-> This article is part of ["Practical Data Platform on Amazon AWS 📊"]({{< ref "/blog/data-platform-aws" >}}) series.
-
-
-### 🚀 Why it matters?
+## 🚀 Why it matters?
 - The solution is equipped to handle both structured and unstructured data, a crucial aspect for both analytical and engineering tasks.
 - It is capable of facilitating both real-time streaming and batch data processing.
 - With proper configuration, it proves to be cost-efficient and scalable; both storage and processing tiers are decoupled and highly optimized.
 - The solution adheres to regulatory and compliance requirements, ensuring data protection and the safeguarding of sensitive information.
 
-### What you will learn?
+## What you will learn?
 - How specific AWS services synergize to provide a serverless data platform.
 - A no-code approach to establishing an infrastructure capable of collecting, transforming, and querying underlying data with minimal cost implications.
 - The practical distinctions between representing files in JSON and Parquet formats.
@@ -31,9 +30,6 @@ Since the initial release of your app, during the early stages of the telemetry 
 Anticipating an exponential surge in user growth in the near future, we are actively preparing a robust, scalable, and highly secure mechanism for efficient data collection. To expedite the development progress, a set of user sessions was modeled as a _Markov Decision Process_, where each state carries a specific transition probability.
 
 {{< mermaid >}}
----
-title: User session state transition probabilities diagram
----
 stateDiagram-v2
     anonymous_visited: Anonymous app visit
     account_created: Account created
@@ -60,7 +56,7 @@ In preparation, we have compiled a synthetic dataset comprising 100,000 distinct
 ## Layman's system architecture
 In the initial approach, our strategy involves creating a dedicated service process that exposes an HTTP collector endpoint. This process performs the initial data processing and subsequently transmits the processed data downstream for storage, either in a database or a file system.
 
-{{< figure src="../images/naive-approach.png" caption="Naive Approach System Architecture." >}}
+{{< figure src="images/naive-approach.png" caption="Naive Approach System Architecture." >}}
 
 While this design could be functional, it comes with several notable drawbacks:
 - **Scalability Challenges**: The allocated resources might struggle to manage high levels of incoming traffic.
@@ -89,7 +85,7 @@ Kinesis Firehose operates by exposing an endpoint to consume events, subsequentl
 
 For the initial illustration, our emphasis will be on the storage of data in its native form - as JSON objects.
 
-```terraform
+{{< highlight tf "noClasses=false, tabWidth=2" >}}
 resource "aws_kinesis_firehose_delivery_stream" "json_firehose_stream" {
   name        = "${var.firehose_stream_name}_json"
   destination = "extended_s3"
@@ -132,8 +128,7 @@ resource "aws_kinesis_firehose_delivery_stream" "json_firehose_stream" {
     }
   }
 }
-
-```
+{{< / highlight >}}
 
 When examining the Terraform resource declaration, we can observe several intricate aspects in play. Let's begin from the top:
 
@@ -165,10 +160,10 @@ Let's proceed to create a secondary Kinesis Firehose delivery configuration, clo
 
 Observe the configuration block for `parquet_ser_de` [output serializer configuration](https://docs.aws.amazon.com/firehose/latest/APIReference/API_ParquetSerDe.html), which offers the flexibility to define parameters such as compression techniques and HDFS block size. For the sake of a more equitable comparison, we will, however, retain the default settings.
 
-```terraform
+{{< highlight tf "noClasses=false, tabWidth=2">}}
 resource "aws_kinesis_firehose_delivery_stream" "parquet_firehose_stream" {
-    # ...
- 
+    #...
+
     data_format_conversion_configuration {
       input_format_configuration {
         deserializer {
@@ -193,7 +188,7 @@ resource "aws_kinesis_firehose_delivery_stream" "parquet_firehose_stream" {
 
     # ...
 }
-```
+{{< / highlight >}}
 
 This declaration also necessitates that we specify the schema for the underlying data, which will be defined in the subsequent section.
 
@@ -204,26 +199,26 @@ The dataset itself comprises over 700,000 raw events, amounting to a total stora
 
 Our aim is to gain an initial sneak peek into how the data is stored and to gather an overview of the statistics for the S3 bucket as a whole.
 
-```bash
+{{< highlight bash "noClasses=false, tabWidth=2">}}
 # JSON sink bucket stats
 $ aws s3 ls s3://<bucket>/events_raw/json/ --recursive --human-readable --summarize
 
 # ...
 Total Objects: 21
 Total Size: 44.1 MiB
-```
+{{< / highlight >}}
 
 
-```bash
+{{< highlight bash "noClasses=false, tabWidth=2">}}
 # Parquet sink bucket stats
 $ aws s3 ls s3://<bucket>/events_raw/parquet/ --recursive --human-readable --summarize
 
 # ...
 Total Objects: 20
 Total Size: 39.5 MiB
-```
+{{< / highlight >}}
 
-```bash
+{{< highlight bash "noClasses=false, tabWidth=2">}}
 # First few rows from decompressed JSON file 
 aws s3 cp s3://<bucket>/events_raw/json/name=anonymous_visited/d=2023-07-31/<file>.gz - | gzip -d | head
 {"name": "anonymous_visited", "tstamp": "2023-06-18 14:27:52.000000", "payload": "{\"dvce_os\": \"Android 4.3.1\", \"session_id\": \"FQMDaWRSHuZGMOJKzQIn\"}", "payload_md5": "000016e7e672dddb6b7cdd607c4e372b"}
@@ -236,7 +231,7 @@ aws s3 cp s3://<bucket>/events_raw/json/name=anonymous_visited/d=2023-07-31/<fil
 {"name": "anonymous_visited", "tstamp": "2023-07-20 14:00:00.000000", "payload": "{\"dvce_os\": \"Android 3.2.3\", \"session_id\": \"UmrcciBVaxuKftXTYmKG\"}", "payload_md5": "000566837b27bbda0310798ce0e63bf5"}
 {"name": "anonymous_visited", "tstamp": "2023-05-01 18:28:29.000000", "payload": "{\"dvce_os\": \"Android 3.2.5\", \"session_id\": \"NLgsXzWGntGebfDEFEkL\"}", "payload_md5": "0005a3b04e32ecc08dad9c6990194c9f"}
 {"name": "anonymous_visited", "tstamp": "2021-07-25 19:55:18.000000", "payload": "{\"dvce_os\": \"Android 2.3.4\", \"session_id\": \"itAqBfmzNBaLAlydARtE\"}", "payload_md5": "0005d027655753217b46305bdc40e035"}
-```
+{{< / highlight >}}
 
 Both streams have successfully reduced their sizes by almost 4 times, thanks to the chosen data compression method. Notably, Parquet format exhibits slightly superior efficiency due to its internal binary format representation.
 
@@ -245,7 +240,7 @@ With the streaming data being consistently stored in Amazon S3 at regular time i
 
 To initiate the process, we commence by defining the necessary resources for two  AWS Glue tables: `events_json` and `events_parquet`.
 
-```terraform
+{{< highlight tf "noClasses=false, tabWidth=2" >}}
 resource "aws_glue_catalog_table" "events_json" {
   database_name = aws_glue_catalog_database.glue_db.name
   name          = "events_json"
@@ -292,9 +287,9 @@ resource "aws_glue_catalog_table" "events_json" {
     }
   }
 }
-```
+{{< / highlight >}}
 
-```terraform
+{{< highlight tf "noClasses=false, tabWidth=2" >}}
 resource "aws_glue_catalog_table" "events_parquet" {
   database_name = aws_glue_catalog_database.glue_db.name
   name          = "events_parquet"
@@ -323,30 +318,30 @@ resource "aws_glue_catalog_table" "events_parquet" {
 
     # ...
 }
-```
+{{< / highlight >}}
 
 [//]: # (LOL END, Rewrite this section to be grammatically correct, acting as a data engineering expert targeting prospects for the software development company:)
 
-We need to deliberately mention each data column with»in our data as well as partition keys that constitute a path to object (used for the later _"predicate pushdown"_ optimization). We also set the `EXTERNAL` property, indicating that the table metadata is stored inside AWS Glue Data Catalog but the data resides in external data source (S3 in this case).
+We must deliberately mention each data column within our data and partition keys constituting a path to the object (used for the later _"predicate pushdown"_ optimization). We also set the `EXTERNAL` property, indicating that the table metadata is stored inside AWS Glue Data Catalog, but the data resides in the external data source (S3).
 
-{{< figure src="../images/aws_glue_tables.png" caption="Created tables in AWS Glue web console." >}}
+{{< figure src="images/aws_glue_tables.png" caption="Created tables in AWS Glue web console." >}}
 
-Glue also enables more automatic way of discovering and registering tables based on the underlying by using _Glue Crawlers_. However, we prefer to have more control about the process, therefore declare things manually. 
+Glue also enables a more automatic way of discovering and registering tables based on the underlying by using _Glue Crawlers_. However, we prefer to have more control over the process, therefore, declare things manually.
 
-> **Pro-tip**: sometimes changes to AWS Glue tables are not propagated correctly. In case of weird behaviour, it's advised to remove the table and recreate it.
+> **Pro-tip**: Occasionally, modifications to AWS Glue tables may not be propagated accurately. If you encounter unusual behavior, it is recommended to delete the table and then recreate it.
 
-Now, when we have everything in place let's try to query to run some queries in Athena. Interestingly, when you try to sneak-peak into the table you will see no results at this stage. That's the reason that the existing partitions are not registered in the Glue metastore. There are at least two ways to solve it:
+Now that everything is in place, let's attempt to execute some queries in Athena. Interestingly, upon attempting to preview the table, you will notice that there are no results available at this stage. This is because the existing partitions have not been registered in the Glue metastore. There are at least two approaches to resolve this::
 
-1. `MSCK REPAIR TABLE <table_name>;` to automatically discover the recursive partition structure in given location,
-2. or manually for each directory `ALTER TABLE <table_name> ADD PARTITION (event_name="...", d="...") LOCATION "s3://..."` 
+1. Utilize the `MSCK REPAIR TABLE <table_name>;` command  to automatically discover the recursive partition structure at the given location.
+2. Alternatively, you can opt for a manual approach for each directory by using the `ALTER TABLE <table_name> ADD PARTITION (event_name="...", d="...") LOCATION "s3://..."` command.
 
-This action shall be repeated whenever a new partition becomes present.
+It's important to note that this action needs to be repeated whenever a new partition becomes available.
 
-{{< figure src="../images/events_json_select.png" caption="Structure of the `events_json` table. Notice that partitions appear as a table's columns." >}}
+{{< figure src="images/events_json_select.png" caption="Structure of the `events_json` table. Notice that partitions appear as a table's columns." >}}
 
-Now, pretend that we are interested in aggregated view of anonymous user sessions in June 2023. The corresponding SQL query might look as follows:
+Let's imagine that we're interested in obtaining an aggregated view of anonymous user sessions that occurred in June 2023. The corresponding SQL query could be formulated as follows::
 
-```sql
+{{< highlight sql "noClasses=false, tabWidth=2" >}}
 WITH
     junes_anonymous_visits AS (
         SELECT *
@@ -368,19 +363,20 @@ WITH
         GROUP BY 1
     )
 SELECT * FROM groupped ORDER BY 1;
-```
+{{< / highlight >}}
 
-Long story short, we can leverage the declarative SQL syntax alongside with proprietary functions (like parsing JSON objects) to model and query the underlying data. Moreover, Athena transiently handles compress and encrypted data.
+Long story short, we can leverage the declarative SQL syntax alongside proprietary functions (like parsing JSON objects) to model and query the underlying data. Moreover, Athena transiently handles compressed and encrypted data.
 
 Let's execute the query above using two created tables as a source and observe the metadata.
 
-{{< figure src="../images/athena_json.png" caption="8.18 MB of data scanned when using the `events_json` table." >}}
-{{< figure src="../images/athena_parquet.png" caption="4.19 MB of data scanned when using the `events_parquet` table." >}}
+{{< figure src="images/athena_json.png" caption="8.18 MB of data scanned when using the `events_json` table." >}}
+{{< figure src="images/athena_parquet.png" caption="4.19 MB of data scanned when using the `events_parquet` table." >}}
 
-In both cases we see that the amount of data scanned is significantly less that the total data stored on S3 buckets. That is caused by the _predicate projection_ feature, deciding what is the location of the objects - in this case only `anonymous_visited` partition is investigated (located in own subdirectory structure). Utilization of Parquet format is even more efficient by leveraging the _predicate pushdown_ scanning only the relevant portions of file (containing columns of interest). Since Athena's pricing model is a function of the data scanned, that has a direct implication on the final AWS bill.
+In both cases, we see that the amount of data scanned is significantly less than the total data stored on S3 buckets. That is caused by the _predicate projection_ feature, deciding what the location of the objects is - in this case, only `anonymous_visited` partition is investigated (located in its own subdirectory structure). Utilization of Parquet format is even more efficient by leveraging the _predicate pushdown_ scanning only the relevant portions of the file (containing columns of interest). Since Athena's pricing model is a function of the data scanned, that directly affects the final AWS bill.
 
 ## Cost estimation
-The pessimistic [AWS costs estimations](https://calculator.aws) for running the following examples are less than a dollar and are broken down below. The most significant part belongs to AWS Athena, but the assumption was that there are 100 full scan queries (not very optimal) daily for a month and no caching mechanisms were considered.  
+The projected AWS cost estimates for operating the provided examples amount to less than a dollar. A detailed breakdown is provided below. The largest portion of the cost can be attributed to AWS Athena. It's important to note that this estimation is based on the assumption of 100 full-scan queries (which might not be very optimal) being executed daily for a month, without accounting for any caching mechanisms. For more information, you can refer to the [AWS cost calculator](https://calculator.aws).
+
 
 | **Service**           | **Input (monthly)**         | **Cost**  |
 |-----------------------|-----------------------------|-----------|
@@ -391,16 +387,18 @@ The pessimistic [AWS costs estimations](https://calculator.aws) for running the 
 |                       |                             | **$0.83** |
 
 ## Closing thoughts
-We saw that AWS Kinesis Data Firehose provides a surprisingly simple mechanism for scalable data ingestion. By utilizing the _"dynamic partitioning"_ we can leverage of the _"predicate pushdown"_ by physically organizing rows into directories.  Then, by enabling the _"Record format conversion"_ feature, we transformed data into as Parquet files in-flight. This allows us to take the next advantage of the _"projection pushdown"_ feature - only file's blocks containing relevant data was scanned.
+We have observed that AWS Kinesis Data Firehose offers a remarkably straightforward mechanism for achieving scalable data ingestion.
 
-While the presented solution is a great first step it has serious drawbacks:
+By making use of the concept of _"dynamic partitioning"_, we can effectively harness the power of _"predicate pushdown"_ by physically organizing rows into directories. Moreover, through the activation of the _"Record format conversion"_ feature, we can seamlessly convert data into Parquet files during the data's flight. This, in turn, empowers us to further benefit from the _"projection pushdown"_ capability, as it enables the scanning of only those file blocks that contain pertinent data.
 
-1. Parquet files are most efficient when the file size oscillates around 64-128MB. That might be achieved by increasing the Kinesis Firehose buffering window, but increases solution latency. Currently, the file size depends on data velocity, hence it's very probable that a lot of small files are created providing additional computation overhead.
-2. Data analysis are required to be aware of data partitioning scheme (physical data layout) to execute efficient queries.
-3. We have very limited set of DML operations (no updates, nor deletes) and lacking mechanism to restrict access to the data
+While the solution presented represents a great initial stride, it does carry certain noteworthy limitations:
 
-We will investigate ways to address these concerns in next posts.
+1. The optimal efficiency of Parquet files is typically achieved when the file size maintains a range of around 64-128MB. Accomplishing this might involve extending the buffering window of Kinesis Firehose, albeit at the expense of increased solution latency. Presently, the size of generated files is contingent upon the velocity of incoming data, which in turn increases the likelihood of generating numerous smaller files, consequently introducing additional computational overhead.
+2. To execute queries with efficiency, data analysts are required to possess an understanding of the data partitioning scheme (the physical layout of the data).
+3. The range of available Data Manipulation Language (DML) operations is rather limited, precluding updates and deletes. Furthermore, a mechanism to control access to the data is noticeably absent.
+
+In the subsequent posts, we will delve into potential strategies for addressing these concerns.
 
 ---
 
-The code for reproduction is free of charge and available [here](https://github.com/khozzy/aws-data-lake/tree/master). Need some help? Contact us!
+The code for reproduction is free of charge and available [here](https://github.com/khozzy/aws-data-lake/tree/master).

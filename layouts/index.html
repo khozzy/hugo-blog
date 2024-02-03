@@ -1,0 +1,48 @@
+{{- define "content" -}}
+{{- $params := .Scratch.Get "params" -}}
+{{- $profile := .Site.Params.home.profile -}}
+{{- $posts := .Site.Params.home.posts -}}
+
+<div class="page home" {{ if ne $posts.enable false }} data-home="posts" {{ end }}>
+    {{- /* Profile */ -}}
+    {{- if ne $profile.enable false -}}
+    {{- partial "home/profile.html" . -}}
+    {{- end -}}
+
+    <!-- ADDED: START -->
+    <iframe src="https://embeds.beehiiv.com/85746baf-2b87-47c6-ba5c-76ef42f2a0d5" data-test-id="beehiiv-embed"
+        width="100%" height="320" frameborder="0" scrolling="no"
+        style="border-radius: 4px; border: 2px solid #e5e7eb; margin: 0; background-color: transparent;"></iframe>
+    <!-- ADDED: END -->
+
+    {{- /* Content */ -}}
+    {{- if .Content -}}
+    <div class="single">
+        <div class="content" id="content">
+            {{- dict "Content" .Content "Ruby" $params.ruby "Fraction" $params.fraction "Fontawesome"
+            $params.fontawesome | partial "function/content.html" | safeHTML -}}
+        </div>
+    </div>
+    {{- end -}}
+
+    {{- /* Posts */ -}}
+    {{- if ne $posts.enable false | and .Site.RegularPages -}}
+    {{- /* Paginate */ -}}
+    {{- $pages := where .Site.RegularPages "Type" "posts" -}}
+    {{- if .Site.Params.page.hiddenFromHomePage -}}
+    {{- $pages = where $pages "Params.hiddenfromhomepage" false -}}
+    {{- else -}}
+    {{- $pages = where $pages "Params.hiddenfromhomepage" "!=" true -}}
+    {{- end -}}
+    {{- with $posts.paginate | default .Site.Params.paginate -}}
+    {{- $pages = $.Paginate $pages . -}}
+    {{- else -}}
+    {{- $pages = .Paginate $pages -}}
+    {{- end -}}
+    {{- range $pages.Pages -}}
+    {{- .Render "summary" -}}
+    {{- end -}}
+    {{- partial "paginator.html" . -}}
+    {{- end -}}
+</div>
+{{- end -}}
