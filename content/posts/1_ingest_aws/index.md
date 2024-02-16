@@ -1,5 +1,6 @@
 ---
 title: "From Ingestion to Insight: Creating a Budget-Friendly Data Lake with AWS"
+slug: budget-data-lake-with-aws
 date: 2024-02-02T12:05:02+02:00
 author: Norbert
 draft: false
@@ -8,7 +9,7 @@ tags:
 - Cloud Computing
 ---
 
-## 🚀 Why it matters?
+## Why it matters? 🚀
 - The solution is equipped to handle both structured and unstructured data, a crucial aspect for both analytical and engineering tasks.
 - It is capable of facilitating both real-time streaming and batch data processing.
 - With proper configuration, it proves to be cost-efficient and scalable; both storage and processing tiers are decoupled and highly optimized.

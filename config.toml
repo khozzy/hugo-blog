@@ -569,7 +569,8 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 # Permalinks config
 [Permalinks]
   # posts = ":year/:month/:filename"
-  posts = ":filename"
+  # posts = ":filename"
+  posts = ":slug"
 
 # Privacy config
 [privacy]

@@ -2,4 +2,4 @@
 
 ## Development mode
     git submodule add https://github.com/dillonzq/LoveIt.git themes/LoveIt
-    hugo serve --disableFastRender --buildDrafts
+    
