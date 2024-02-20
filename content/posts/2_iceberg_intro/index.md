@@ -9,12 +9,12 @@ tags:
 ---
 ## Why it matters? 🚀
 - Data Lakes architecture draws very clear line between data storage and computation. It faciliates easier switch between different providers.
-- Lower the bills by packing the storage layer with full-fledged database-like features.
-- Data gravity?
+- Pay less by packing the storage layer with full-fledged database-like features.
+- Affect Data gravity?
 
-## Your levarage
+## Your levarage 🃏
 - Problems when using Hive and distributed object storage for processing huge amounts of data,
-- Setup local research environment using [MinIO](https://min.io/) as data layer and both Apache Spark and Trino as the query engines,
+- Template for setting up local research environment using [MinIO](https://min.io/) as data layer and both Apache Spark and Trino as the query engines.
 
 ---
 
@@ -132,10 +132,18 @@ In 2020, the project was renamed to Trino to avoid confusions with the legacy ve
 
 For the purpose of the exercies we will utilize JDBC catalog using Postgres database, and will try to use two query engines interchangebly - Spark and Trino.
 
-For the preparation we need to make sure to provision both the initial bucket for the data (in this case `s3://whjdbc`) and the metastore table structure. The first is obvious and can be accomplished in multiple ways, but for the metastore, there is a `JdbcUtil`[^jdbc_util] class in Iceberg source crafting required SQLs. The easiest way, that is also recommended by Trio docs[^trino_jdbc], is to just create a table using client like Spark.
+{{< admonition question  "Why JDBC Catalog?">}}
+Because it is (1) supported by both Spark and Trino and (2) can be easily examined to understand the internals.
+
+For local, low volume usage, `HadoopCatalog` can be used as well [(link)](https://stackoverflow.com/questions/73361391/write-apache-iceberg-table-to-azure-adls-s3-without-using-external-catalog). It operates by maintaining the `version-hint.txt` file inside the bucket pointing to the latest snaphshot revision. You can see corresponding Spark catalog in the repository. On the other hand, for production workflows, choosing some sort of `RestCatalog` is recommended (like [Project Nessie](https://projectnessie.org/)).
+
+{{< /admonition >}}
+
+For the preparation, we need to make sure to provision both the initial bucket for the data (in this case `s3://whjdbc`) and the metastore table structure. The first is obvious and can be accomplished in multiple ways, but for the metastore, there is a `JdbcUtil`[^jdbc_util] class in Iceberg source crafting required SQLs. The easiest way, that is also recommended by Trio docs[^trino_jdbc], is to just create a table using client like Spark alongside creation of the first table.
 
 ```sql
 -- Spark SQL
+-- This will also create tables in JDBC catalog
 create table if not exists cat_jdbc.db.events (
     event_ts timestamp,
     level string,
@@ -145,26 +153,26 @@ create table if not exists cat_jdbc.db.events (
 using iceberg;
 ```
 
-Spark used the configured `cat_jdbc` catalog to create a `db` database with `events` table. As the result two tables were created in the metastore:
+Spark used the configured `cat_jdbc` catalog to create a `db` database with `events` table. As the result two tables were created in the metastore for us:
 
-- `iceberg_namespace_properties`
-- `iceberg_tables`
+1. `iceberg_namespace_properties`,
+2. `iceberg_tables`
 
 Inside `iceberg_tables` there is one row, pointing to the latest snapshot file.
 
 | catalog_name | table_namespace | table_name | metadata_location                                                                       | previous_metadata_location |
 | ------------ | --------------- | ---------- | --------------------------------------------------------------------------------------- | -------------------------- |
-| cat\_jdbc    | db              | events     | s3://whjdbc/db/events/metadata/00000-5b486875-7fb9-4c33-9753-2ed062a9c13d.metadata.json | NULL                       |
+| cat\_jdbc    | db              | events     | s3://whjdbc/db/events/metadata/00000-9df924fa-76e9-4c34-a49e-3e4d95acdecd.metadata.json | NULL                       |
 
 You can look at the file contents below:
 ```json
--- s3 cp s3://whjdbc/db/events/metadata/00000-5b486875-7fb9-4c33-9753-2ed062a9c13d.metadata.json - | jq
+-- s3 cp s3://whjdbc/db/events/metadata/00000-9df924fa-76e9-4c34-a49e-3e4d95acdecd.metadata.json - | jq
 {
   "format-version": 2,
-  "table-uuid": "712cc655-720b-43f5-b629-240236d31438",
+  "table-uuid": "74bf48ba-caf2-4bc7-a713-52f226e52dc2",
   "location": "s3://whjdbc/db/events",
   "last-sequence-number": 0,
-  "last-updated-ms": 1708083471114,
+  "last-updated-ms": 1708432726246,
   "last-column-id": 5,
   "current-schema-id": 0,
   "schemas": [
@@ -236,14 +244,116 @@ You can look at the file contents below:
 ## Dive into Apache Iceberg
 
 ### Basics
-- ACID?
-- V1, V2 specs (https://iceberg.apache.org/spec/)?
-- Merge on Read?
+Now, having the table in place, lets put some data inside.
 
-Before we begin we need to initialize JDBC catalog, the easiest way is to create a table in Spark.
-https://github.com/apache/iceberg/blob/212355e13b3a8c40441725a260ae6e69bb1a0a9e/core/src/main/java/org/apache/iceberg/jdbc/JdbcCatalog.java#L66
+```sql
+-- Spark SQL
+insert into cat_jdbc.spark.logs
+values
+(
+    timestamp '2023-01-01 12:00:00.000001',
+    'INFO',
+    'App started',
+    null
+),
+(
+    timestamp '2023-01-02 13:20:00.000001',
+    'ERROR',
+    'Exception',
+    array(
+        'java.lang.Exception: Stack trace at
+        java.base/java.lang.Thread.dumpStack(Thread.java:1380)'
+    )
+),
+(
+    timestamp '2023-01-02 15:45:00.000001',
+    'WARN',
+    'NullPointerException',
+    array(
+        'java.lang.NullPointerException: Stack trace at
+        java.base/java.lang.Thread.dumpStack(Thread.java:1380)'
+    )
+);
+```
 
+A few things happend:
+- data is saved in bucket's `data/` directory as Parquet files (default format),
+- pointer to the latest table snapshot in catalog (`metadata_location`) is updated
+- the new metadata file is augugmented with `snapshots` property with brief statistics of the latest operation and pointer to the _manifest-list_ file (snippet below). 
 
+```json
+{
+  # ...
+  "current-snapshot-id": 5859685757530425183,
+  "refs": {
+    "main": {
+      "snapshot-id": 5859685757530425183,
+      "type": "branch"
+    }
+  },
+  "snapshots": [
+    {
+      "sequence-number": 1,
+      "snapshot-id": 5859685757530425183,
+      "timestamp-ms": 1708432958123,
+      "summary": {
+        "operation": "append",
+        "spark.app.id": "local-1708432709892",
+        "added-data-files": "3",
+        "added-records": "3",
+        "added-files-size": "5261",
+        "changed-partition-count": "1",
+        "total-records": "3",
+        "total-files-size": "5261",
+        "total-data-files": "3",
+        "total-delete-files": "0",
+        "total-position-deletes": "0",
+        "total-equality-deletes": "0"
+      },
+      "manifest-list": "s3://whjdbc/db/events/metadata/snap-5859685757530425183-1-d6ddf331-42fa-4a94-b861-760cb215770e.avro",
+      "schema-id": 0
+    }
+  ],
+  # ...
+}
+```
+{{< figure src="images/manifest-list.png" caption="Preview of the manifest-list file in Avro format (extracted using online tools). You see list of manifest entries with corresponding statistics." >}}
+
+The data now can be queried using regular SQL syntax.
+```sql
+-- Trino
+select * from warehouse.db.events
+```
+
+Our transactions are ACID-compliant. Let's go crazy and try them out. Each of the following queries will append a new snapshot to metadata file. 
+```sql
+-- Trino
+update warehouse.db.events
+    set message = 'NPE'
+    where message = 'NullPointerException';
+
+delete from warehouse.db.events where level = 'INFO';
+
+insert into warehouse.db.events
+values
+(
+    timestamp '2023-03-01 08:00:00.000001',
+    'VERBOSE',
+    'Connector configured',
+    null
+);
+```
+{{< admonition info  "Modyfing data">}}
+There are two modes of modyfing data - **Copy-on-Write** and **Merge-on-Read**. The former one is default, but you can change the behaviour using the `write.[update|delete|merge].mode` [properties](https://iceberg.apache.org/docs/latest/configuration/#write-properties). On the other side, the latter one is supported for version 2 of the Iceberg table format specification (you can check it on top of metadata file).
+
+> **Copy-on-Write**: Even if a single row in data file is modified the whole file is rewritten. New snapshot points to the latest data file.
+
+> **Merge-on-Read**: In this case, the existing data file is not rewritten, but a new _delete file_ is created. It keeps track of the records that were removed either using the "Positional Delete Files" or "Equality Delete Files" (depending on the query engine interface). During query execution, results are refined with the contents of delete files.
+
+Chosing between each mode depends on data access patterns. Copy-on-Write shines for cases where reading data is frequent, but behaves poorly on frequent writes. In contrary, Merge-on-Read needs to perform extra job when reading the data (combine multiple files), but the write operation does not require to rewrite whole data files.
+
+Keep in mind that in both cases the data is **NOT** physically removed and can be accessed for example with time-travel while refencing particular snapshots. It's advised to setup [table snapshot expiration policies](https://iceberg.apache.org/docs/latest/configuration/#write-properties) or to provision an asynchronous task calling the `expire_snapshot` procedure.
+{{< /admonition >}}
 
 
 ### Schema evolution
@@ -335,14 +445,22 @@ To change the table layout, partitioning structure you might create a snapshot o
 - https://iceberg.apache.org/docs/latest/spark-ddl/#replace-table-as-select
 - https://trino.io/docs/current/connector/iceberg.html#replacing-tables
 
-### Time travel
+### Time travel and Rollbacks
 Replacing tables
 
+### Data compaction
+...
 
-### Write-Audit-Publish (WAP)
+
+### Others
+#### Write-Audit-Publish (WAP)
 Branches
 
-### GDPR regulations and auditing
+#### GDPR regulations and auditing
+- https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html
+- https://iceberg.apache.org/docs/latest/branching/
+- https://www.youtube.com/watch?v=VLZMg8-Yix0
+- https://blog.min.io/secure-minio-1/
 
 {{< rawhtml >}}
 <blockquote class="twitter-tweet" data-media-max-width="560"><p lang="en" dir="ltr">Here is my advice for running SQL queries in VSCode. Adding this keybinding will transfer the line to the underlying terminal process. Works great with DuckDb or Spark SQL. Even better with SQLFluff.<a href="https://twitter.com/hashtag/dataengineering?src=hash&amp;ref_src=twsrc%5Etfw">#dataengineering</a> <a href="https://twitter.com/hashtag/vscode?src=hash&amp;ref_src=twsrc%5Etfw">#vscode</a> <a href="https://t.co/yfWxTWHwnA">pic.twitter.com/yfWxTWHwnA</a></p>&mdash; Norbert Kozlowski (@don_khozzy) <a href="https://twitter.com/don_khozzy/status/1755535763750387728?ref_src=twsrc%5Etfw">February 8, 2024</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
@@ -354,6 +472,7 @@ Branches
 - https://github.com/zsvoboda/ngods-stocks
 - https://github.com/ivrore/apache-iceberg-minio-spark
 - https://blog.cloudera.com/optimization-strategies-for-iceberg-tables/
+- https://www.guptaakashdeep.com/copy-on-write-or-merge-on-read-apache-iceberg-2/
 
 <!-- Footnotes -->
 [^trino_jdbc]: https://trino.io/docs/current/connector/metastores.html?highlight=jdbc#jdbc-catalog
