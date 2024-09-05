@@ -1,0 +1,182 @@
+nameOverride: ""
+fullnameOverride: ""
+
+mautic:
+  image:
+    repository: docker.io/tanjim/mautic
+    pullPolicy: IfNotPresent
+    tag: "5.1.26"
+
+  configMap:
+    SITE_URL: "http://mautic.local"
+    MAUTIC_MESSENGER_DSN_EMAIL: "doctrine://default"
+    MAUTIC_MESSENGER_DSN_HIT: "doctrine://default"
+    MAUTIC_API_ENABLED: "1"
+    MAUTIC_API_ENABLE_BASIC_AUTH: "true"
+    MAUTIC_IP_LOOKUP_AUTH: "<user id>:<license>"
+  
+  # existingSecret: ""
+  # ignore the following values if existingSecret is set
+  secret:
+    # admin
+    MAUTIC_ADMIN_USERNAME: "admin"
+    MAUTIC_ADMIN_EMAIL: "contact@example.com"
+    MAUTIC_ADMIN_PASSWORD: "Maut1cR0cks!"
+    # mailer
+    MAUTIC_MAILER_DSN: "smtp://mailhog.default.svc.cluster.local:1025"
+
+  persistence:
+    accessMode: ReadWriteOnce
+    storageClass: "standard"
+
+  web:
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 384Mi
+    hpa:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPU: 80
+    vpa:
+      enabled: false
+      minMemory: 128Mi
+      maxMemory: 1024Mi
+    readinessProbe: &probe
+      exec:
+        command: 
+          - sh
+          - -c
+          - |
+            if [ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost/s/login)" != "200" ]; then
+              exit 1
+            fi
+      timeoutSeconds: 2
+    livenessProbe:
+      <<: *probe
+      timeoutSeconds: 10
+    startupProbe:
+      <<: *probe
+      failureThreshold: 30
+      periodSeconds: 10
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "kubernetes.io/hostname"
+        whenUnsatisfiable: ScheduleAnyway
+      
+  install:
+    # optional, if SITE_URL is not set in configMap
+    siteUrl: "http://localhost:8080"
+    resources:
+      limits:
+        memory: 384Mi
+      requests:
+        memory: 256Mi
+
+  db:
+    create: true
+    # existingConfigMap: ""
+    # ignore the following values if existingConfigMap is set
+    configMap:
+      MAUTIC_DB_HOST: mysql.default.svc.cluster.local
+      MAUTIC_DB_PORT: "3306"
+      MAUTIC_DB_NAME: mautic
+
+    # existingSecret: ""
+    # ignore the following values if existingSecret is set
+    secret:
+      MAUTIC_DB_USER: mautic
+      MAUTIC_DB_PASSWORD: mauticPassword
+  
+  cron:
+    campaignsRebuild:
+      enabled: true
+      schedule: "*/5 * * * *"
+      batchLimit: 300
+      maxContacts: 5000
+      resources: &cron_resources
+        limits:
+          memory: 256Mi
+        requests:
+          memory: 128Mi
+    import:
+      enabled: true
+      schedule: "*/4 * * * *"
+      limit: 5000
+      resources: *cron_resources
+    segmentsUpdate:
+      enabled: true
+      schedule: "*/1 * * * *"
+      batchLimit: 300
+      maxContacts: 5000
+      resources: *cron_resources
+    campaignsTrigger:
+      enabled: true
+      schedule: "*/2 * * * *"
+      batchLimit: 100
+      campaignLimit: 500
+      resources: *cron_resources
+    broadcastsSend:
+      enabled: true
+      schedule: "*/1 * * * *"
+      resources: *cron_resources
+    messagesSend:
+      enabled: true
+      schedule: "*/1 * * * *"
+      resources: *cron_resources
+  
+  messenger:
+    consumeEmail:
+      enabled: true
+      resources: &message_resources
+        limits:
+          memory: 512Mi
+        requests:
+          memory: 256Mi
+      debug: false
+    consumeFailed:
+      enabled: true
+      resources: *message_resources
+      debug: false
+    consumeHit:
+      enabled: true
+      resources: *message_resources
+      debug: false
+
+service:
+  type: ClusterIP
+  port: 80
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: mautic.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+volumes: 
+- name: favicon
+  configMap:
+    name: ct-favicon
+
+volumeMounts: 
+- mountPath: /var/www/html/docroot/favicon.ico
+  subPath: favicon.ico
+  name: favicon
