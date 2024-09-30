@@ -2,7 +2,6 @@
 title: "Decision Making Under Uncertainty"
 slug: decision-making-under-uncertainty
 date: 2024-09-30T08:00:00+01:00
-draft: true
 author: Norbert
 summary: "From alien invasions to cybernetic gladiators and time-travel heists, learn how to make optimal decisions with limited information. Utilize Bayesian methods to strategically navigate challenges and enhance outcomes in this comprehensive exploration of decision-making under uncertainty."
 params:
