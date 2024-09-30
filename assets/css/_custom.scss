@@ -1,0 +1,39 @@
+.highlight-quote {
+    $background-color: #f9f9f9;
+    $border-color: #e0e0e0;
+    $text-color: #555;
+    $font-size: 1.1em;
+
+    background-color: $background-color !important;
+    border-left: 3px solid $border-color !important;
+    border-right: 3px solid $border-color !important;
+    padding: 20px 25px !important;
+    margin: 30px 0 !important;
+    font-style: italic !important;
+    font-size: $font-size !important;
+    color: $text-color !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+    position: relative !important;
+
+    // Add a large quotation mark at the beginning of the blockquote
+    &::before {
+        content: '"' !important;
+        font-size: 4em !important;
+        color: #e0e0e0 !important;
+        position: absolute !important;
+        left: 10px !important;
+        top: -10px !important;
+        font-family: Georgia, serif !important;
+    }
+
+    p {
+        margin: 0 !important;
+        line-height: 1.6 !important;
+        // padding-bottom: 10px !important;
+    }
+}
+
+// Increase specificity for blockquotes with highlight-quote class
+blockquote.highlight-quote {
+    @extend .highlight-quote;
+}

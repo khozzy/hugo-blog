@@ -251,4 +251,27 @@ partial "scratch/style.html" -}}
 <!-- ADDED: START -->
 <script type="text/javascript" async src="https://embeds.beehiiv.com/attribution.js"></script>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+{{ if or ( .HasShortcode "audio" ) ( .HasShortcode "video" ) ( .HasShortcode "archive-audio" ) }}
+
+<!-- Add Plyr CSS -->
+<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+
+<!-- Add Plyr JavaScript -->
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+<!-- Initialize Plyr -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const players = Plyr.setup('.plyr-audio', {
+            controls: [
+                'play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'airplay'
+            ],
+            settings: ['speed'],
+            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+        });
+    });
+</script>
+
+{{ end }}
 <!-- ADDED: END -->

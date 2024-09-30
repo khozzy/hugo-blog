@@ -1,0 +1,28 @@
+{{- $src := "" -}}
+{{- $caption := "" -}}
+{{- $class := "" -}}
+{{- $preload := "" -}}
+
+
+{{- if .IsNamedParams }}
+{{- $src = .Get "src" -}}
+{{- $caption = .Get "caption" -}}
+{{- $class = .Get "class" -}}
+{{- $preload = .Get "preload" | default "metadata" -}}
+{{- else }}
+{{- $src = .Get 0 -}}
+{{- $caption = .Get 1 -}}
+{{- $class = .Get 2 -}}
+{{- $preload = .Get 3 -}}
+{{- end }}
+
+
+<figure {{ with $class }}class="{{ . }}" {{ end }}>
+    <div class="plyr__container">
+        <audio class="plyr-audio" preload="{{ $preload }}">
+            {{ with $src }}
+            <source src="{{ . | relURL }}" type="audio/mpeg">{{ end }}
+        </audio>
+    </div>
+    {{ with $caption }}<figcaption>{{ . }}</figcaption>{{ end }}
+</figure>

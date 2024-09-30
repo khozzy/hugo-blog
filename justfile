@@ -1,2 +1,2 @@
 run_dev:
-    hugo serve --disableFastRender --buildDrafts
+    hugo serve --disableFastRender --buildDrafts --gc
