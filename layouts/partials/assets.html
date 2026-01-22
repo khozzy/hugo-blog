@@ -249,8 +249,18 @@ partial "scratch/style.html" -}}
 {{- partial "plugin/analytics.html" . -}}
 
 <!-- ADDED: START -->
-<script type="text/javascript" async src="https://embeds.beehiiv.com/attribution.js"></script>
 <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+{{- /* Newsletter Subscribe Form */ -}}
+{{- if or (.HasShortcode "subscribe") (.Scratch.Get "hasSubscribe") -}}
+{{- $subscribeConfig := .Site.Params.subscribe | default dict -}}
+{{- $workerUrl := $subscribeConfig.workerUrl | default "" -}}
+{{- if $workerUrl -}}
+<script>window.subscribeConfig = { workerUrl: {{ $workerUrl }} };</script>
+{{- $subscribeJS := resources.Get "js/subscribe.js" | minify | fingerprint -}}
+<script src="{{ $subscribeJS.RelPermalink }}" integrity="{{ $subscribeJS.Data.Integrity }}" defer></script>
+{{- end -}}
+{{- end -}}
 
 {{ if or ( .HasShortcode "audio" ) ( .HasShortcode "video" ) ( .HasShortcode "archive-audio" ) }}
 

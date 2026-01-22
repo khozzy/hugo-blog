@@ -1,0 +1,62 @@
+{{- /*
+  Subscribe Inline Partial - End of Post CTA
+
+  Context: expects dict with:
+  - Page: the current page
+  - headline: optional override
+  - description: optional override
+  - campaign: optional UTM campaign
+  - lead_magnet: optional custom field
+
+  Uses front matter params.subscribe if available, falls back to site config.
+*/ -}}
+
+{{- $page := .Page -}}
+{{- $siteDefaults := $page.Site.Params.subscribe | default dict -}}
+{{- $pageOverrides := $page.Params.subscribe | default dict -}}
+
+{{- /* Merge: passed params > page front matter > site config */ -}}
+{{- $headline := .headline | default $pageOverrides.headline | default $siteDefaults.headline | default "Want more like this?" -}}
+{{- $description := .description | default $pageOverrides.description | default $siteDefaults.description | default "Join engineers who get deep-dives on data architecture." -}}
+{{- $campaign := .campaign | default $pageOverrides.campaign | default "" -}}
+{{- $leadMagnet := .lead_magnet | default $pageOverrides.lead_magnet | default "" -}}
+{{- $button := .button | default $pageOverrides.button | default "Subscribe" -}}
+
+{{- /* Check if subscribe is enabled */ -}}
+{{- $enabled := $siteDefaults.enable | default true -}}
+{{- if and $enabled (ne $pageOverrides.enable false) -}}
+
+{{- /* Signal to assets.html that we need the subscribe JS */ -}}
+{{- $page.Scratch.Set "hasSubscribe" true -}}
+
+<div class="subscribe-box subscribe-inline">
+  <div class="subscribe-content">
+    <h3 class="subscribe-headline">{{ $headline }}</h3>
+    <p class="subscribe-description">{{ $description }}</p>
+  </div>
+  <form class="subscribe-form" data-campaign="{{ $campaign }}" data-lead-magnet="{{ $leadMagnet }}">
+    <div class="subscribe-input-group">
+      <input
+        type="email"
+        class="subscribe-input"
+        placeholder="your@email.com"
+        required
+        autocomplete="email"
+        aria-label="Email address"
+      />
+      <button type="submit" class="subscribe-button">
+        <span class="subscribe-button-text">{{ $button }}</span>
+        <span class="subscribe-button-loading" style="display: none;">
+          <svg class="subscribe-spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </span>
+      </button>
+    </div>
+    <div class="subscribe-message" style="display: none;"></div>
+  </form>
+</div>
+
+{{- end -}}

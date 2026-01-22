@@ -1,0 +1,16 @@
+{
+  "name": "kozlovski-cloudflare-workers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Workers for kozlov.ski blog",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "secret:api-key": "wrangler secret put BEEHIIV_API_KEY",
+    "secret:pub-id": "wrangler secret put BEEHIIV_PUBLICATION_ID"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,54 @@
+{{- /*
+  Subscribe Form Shortcode
+
+  Usage:
+  {{< subscribe >}}
+  {{< subscribe headline="Get the Checklist" description="12 steps for migration" campaign="my-campaign" lead_magnet="my-checklist" button="Get it" >}}
+
+  Parameters:
+  - headline: CTA headline (default: from site config)
+  - description: CTA description (default: from site config)
+  - campaign: UTM campaign value for tracking
+  - lead_magnet: Custom field for Beehiiv segmentation
+  - button: Button text (default: "Subscribe")
+*/ -}}
+
+{{- $defaults := .Site.Params.subscribe -}}
+{{- $headline := .Get "headline" | default $defaults.headline | default "Want more like this?" -}}
+{{- $description := .Get "description" | default $defaults.description | default "Join engineers who get deep-dives on data architecture." -}}
+{{- $campaign := .Get "campaign" | default "" -}}
+{{- $leadMagnet := .Get "lead_magnet" | default "" -}}
+{{- $button := .Get "button" | default "Subscribe" -}}
+
+{{- /* Signal to assets.html that we need the subscribe JS */ -}}
+{{- .Page.Scratch.Set "hasSubscribe" true -}}
+
+<div class="subscribe-box">
+  <div class="subscribe-content">
+    <h3 class="subscribe-headline">{{ $headline }}</h3>
+    <p class="subscribe-description">{{ $description }}</p>
+  </div>
+  <form class="subscribe-form" data-campaign="{{ $campaign }}" data-lead-magnet="{{ $leadMagnet }}">
+    <div class="subscribe-input-group">
+      <input
+        type="email"
+        class="subscribe-input"
+        placeholder="your@email.com"
+        required
+        autocomplete="email"
+        aria-label="Email address"
+      />
+      <button type="submit" class="subscribe-button">
+        <span class="subscribe-button-text">{{ $button }}</span>
+        <span class="subscribe-button-loading" style="display: none;">
+          <svg class="subscribe-spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </span>
+      </button>
+    </div>
+    <div class="subscribe-message" style="display: none;"></div>
+  </form>
+</div>
