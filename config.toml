@@ -26,12 +26,6 @@ enableEmoji = true
 # ignore some build errors
 ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken"]
 
-# Author config
-[author]
-name = "Norbert Kozlowski"
-email = "nkozlowski@pm.me"
-link = ""
-
 # Menu config
 [menu]
 [[menu.main]]
@@ -54,6 +48,12 @@ url = "/about/"
 
 
 [params]
+# Author config
+[params.author]
+name = "Norbert Kozlowski"
+email = "nkozlowski@pm.me"
+link = ""
+
 # site default theme ["auto", "light", "dark"]
 defaultTheme = "auto"
 # public git repo url only then enableGitInfo is true
