@@ -6,6 +6,8 @@ date: 2024-03-22T13:00:00+01:00
 author: Norbert
 tags:
   - Data Engineering
+subscribe:
+  enable: false
 ---
 
 ## Why it matters? 🚀
@@ -68,6 +70,8 @@ The Iceberg table specification includes several key components, starting from t
 - **Manifest List**: Facilitates the reuse of manifest files across snapshots, enhancing efficiency.
 - **Metadata Files (snapshot)**: Tracks the current state of the table, including schema, partitioning configuration, and snapshot history.
 - **Catalog**: Points to the latest snapshot of the table, ensuring up-to-date data access.
+
+{{< subscribe headline="Get the Iceberg Architecture Cheatsheet" description="One-page visual reference: table spec hierarchy, snapshot mechanics, and metadata structure. Pin it next to your terminal." campaign="iceberg-intro" lead_magnet="iceberg-architecture-cheatsheet" button="Send it" >}}
 
 ## Infrastructure
 
@@ -589,6 +593,8 @@ AWS Athena enables the `OPTIMIZE` and `VACUUM` operations[^athena-maintenance] t
 [^athena-maintenance]:
     https://docs.aws.amazon.com/athena/latest/ug/querying-iceberg-data-optimization.html
     {{< /admonition >}}
+
+{{< subscribe headline="Get the Iceberg Architecture Cheatsheet" description="One-page visual reference: table spec hierarchy, snapshot mechanics, and metadata structure. Pin it next to your terminal." campaign="iceberg-intro" lead_magnet="iceberg-architecture-cheatsheet" button="Send it" >}}
 
 ### Extra
 

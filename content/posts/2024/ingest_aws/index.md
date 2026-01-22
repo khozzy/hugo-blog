@@ -5,6 +5,8 @@ summary: "Build a serverless, cost-efficient data lake on AWS using Kinesis Fire
 date: 2024-02-02T12:05:02+02:00
 author: Norbert
 draft: false
+subscribe:
+  enable: false
 tags:
   - Data Engineering
   - Cloud Computing
@@ -206,6 +208,14 @@ resource "aws_kinesis_firehose_delivery_stream" "parquet_firehose_stream" {
 
 This declaration also necessitates that we specify the schema for the underlying data, which will be defined in the subsequent section.
 
+{{< subscribe
+  headline="Skip the Copy-Paste"
+  description="Get the complete Terraform module for this setup. Both JSON and Parquet Firehose streams, Glue tables, IAM roles—ready to deploy."
+  campaign="budget-data-lake-with-aws"
+  lead_magnet="aws-data-lake-terraform"
+  button="Send the Code"
+>}}
+
 ## Data ingestion
 
 With the Kinesis Delivery Streams now prepared, it's time to populate them with data. Once our synthetic dataset is generated, we will transfer it in batches using the [`put_record_batch`](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/firehose/client/put_record_batch.html) API operation. This transfer will be done separately for each stream. You can find the [source code](...) for this process here.
@@ -368,26 +378,26 @@ Let's imagine that we're interested in obtaining an aggregated view of anonymous
 
 {{< highlight sql "noClasses=false, tabWidth=2" >}}
 WITH
-junes*anonymous_visits AS (
-SELECT *
-FROM kozlovski.events*json
-WHERE name = 'anonymous_visited'
-AND DATE_TRUNC('month', tstamp) = date('2023-06-01')
-),
-extracted AS (
-SELECT DISTINCT
-date_trunc('day', tstamp) AS day,
-json_extract_scalar(payload, '$.session_id') AS session_id
-FROM junes_anonymous_visits
-),
-groupped AS (
-SELECT
-day,
-COUNT(*)
-FROM extracted
-GROUP BY 1
-)
-SELECT \* FROM groupped ORDER BY 1;
+    junes_anonymous_visits AS (
+        SELECT *
+        FROM kozlovski.events_json
+        WHERE name = 'anonymous_visited' 
+            AND DATE_TRUNC('month', tstamp) = date('2023-06-01')
+    ),
+    extracted AS (
+        SELECT DISTINCT
+            date_trunc('day', tstamp) AS day,
+            json_extract_scalar(payload, '$.session_id') AS session_id
+        FROM junes_anonymous_visits
+    ),
+    groupped AS (
+        SELECT
+            day,
+            COUNT(*)
+        FROM extracted
+        GROUP BY 1
+    )
+SELECT * FROM groupped ORDER BY 1;
 {{< / highlight >}}
 
 Long story short, we can leverage the declarative SQL syntax alongside proprietary functions (like parsing JSON objects) to model and query the underlying data. Moreover, Athena transiently handles compressed and encrypted data.
@@ -426,5 +436,13 @@ While the solution presented represents a great initial stride, it does carry ce
 In the subsequent posts, we will delve into potential strategies for addressing these concerns.
 
 ---
+
+{{< subscribe
+  headline="Get the Production-Ready Terraform"
+  description="Deploy this entire stack in minutes. Kinesis Firehose, S3, Glue catalog, Athena—all wired up with encryption and dynamic partitioning. The same code I use."
+  campaign="budget-data-lake-with-aws"
+  lead_magnet="aws-data-lake-terraform"
+  button="Get the Module"
+>}}
 
 The code for reproduction is free of charge and available [here](https://github.com/khozzy/aws-data-lake/tree/master).
