@@ -1,0 +1,38 @@
+{{- /*
+  Gumroad Product CTA Shortcode
+
+  Usage:
+  {{< gumroad
+      url="https://yourname.gumroad.com/l/product"
+      headline="Get the Guide"
+      description="Step-by-step checklist for deployment."
+      button="Download Free"
+  >}}
+
+  Parameters:
+  - url: Gumroad product URL (required)
+  - headline: CTA headline
+  - description: CTA description
+  - button: Button text (default: "Get it Free")
+*/ -}}
+
+{{- $url := .Get "url" -}}
+{{- $headline := .Get "headline" | default "Get the Resource" -}}
+{{- $description := .Get "description" | default "Download this free resource." -}}
+{{- $button := .Get "button" | default "Get it Free" -}}
+
+<div class="gumroad-cta">
+  <div class="gumroad-cta-content">
+    <h3 class="gumroad-cta-headline">{{ $headline }}</h3>
+    <p class="gumroad-cta-description">{{ $description }}</p>
+  </div>
+  {{- if $url -}}
+  <a href="{{ $url }}" class="gumroad-cta-button" target="_blank" rel="noopener">
+    {{ $button }}
+  </a>
+  {{- else -}}
+  <span class="gumroad-cta-button gumroad-cta-button--disabled" title="Product link not configured">
+    {{ $button }}
+  </span>
+  {{- end -}}
+</div>

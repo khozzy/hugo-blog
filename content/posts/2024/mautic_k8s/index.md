@@ -22,18 +22,18 @@ This guide walks through deploying Mautic on Kubernetes using Helm charts. Beyon
 We'll cover:
 
 - Setting up a local Kubernetes cluster with Minikube
-- Installing Mautic with its ecosystem (MySQL, Mailhog) as Helm charts
+- Installing Mautic with its ecosystem (MariaDB, Mailhog) as Helm charts
 - Understanding the cron job architecture and message queue patterns
 
 ## What is Mautic?
 
-Mautic is an open-source marketing automation platform covering lead management, email marketing, campaign orchestration, and analytics. Unlike SaaS alternatives (HubSpot, Marketo, ActiveCampaign), you self-host it—which means direct MySQL database access, full control over the data model, and no vendor lock-in.
+Mautic is an open-source marketing automation platform covering lead management, email marketing, campaign orchestration, and analytics. Unlike SaaS alternatives (HubSpot, Marketo, ActiveCampaign), you self-host it—which means direct MariaDB database access, full control over the data model, and no vendor lock-in.
 
 ### Why Self-Host as a Data Engineer?
 
 The decision to run your own marketing automation isn't primarily about cost savings. It's about data architecture:
 
-- **Direct database access**: Query contacts, events, and campaign data directly from MySQL. No API rate limits, no pagination, no waiting for export jobs.
+- **Direct database access**: Query contacts, events, and campaign data directly from MariaDB. No API rate limits, no pagination, no waiting for export jobs.
 - **Event stream ownership**: Page hits, email opens, and form submissions flow through a Doctrine message queue you control. You can tap into this for real-time analytics or CDC pipelines.
 - **Schema control**: Extend the contact model with custom fields that map cleanly to your warehouse schema.
 - **Privacy compliance**: For GDPR/CCPA requirements, knowing exactly where contact data lives simplifies compliance.
@@ -79,14 +79,23 @@ helm repo update
 
 With these repositories configured, we can install the services.
 
-{{< subscribe headline="Get the Deployment Checklist" description="22-step checklist for Mautic on Kubernetes. From 'minikube start' to 'first API call successful.' Check them off as you go."campaign="mautic-5x-kubernetes-setup" lead_magnet="mautic-deployment-checklist" button="Send it" >}}
+{{< gumroad
+    url="https://nkozlovski.gumroad.com/l/rqgdwj"
+    headline="Get the Deployment Guide"
+    description="7-checkpoint checklist with all Helm values files for MariaDB, Mailhog, and Mautic. Copy-paste ready YAML configs included."
+    button="Download Free"
+>}}
 
-### MySQL
+### MariaDB
 
-Start with the MySQL database using a custom configuration file:
+{{< admonition warning "Why MariaDB instead of MySQL?" >}}
+Bitnami discontinued their MySQL Docker image. MariaDB is the recommended drop-in replacement—it's fully compatible with MySQL and uses the same configuration structure. If you're following older tutorials that reference `bitnami/mysql`, simply substitute `bitnami/mariadb` instead.
+{{< /admonition >}}
+
+Start with the MariaDB database using a custom configuration file:
 
 ```yaml
-# mysql-values.yaml
+# mariadb-values.yaml
 auth:
   rootPassword: myRootPassword
   database: mautic
@@ -104,21 +113,21 @@ metrics:
 Then, proceed with installing the chart.
 
 ```bash
-helm install mysql bitnami/mysql -f mysql-values.yaml
+helm install mariadb bitnami/mariadb -f mariadb-values.yaml
 ```
 
 {{< admonition info  "Accessing the database">}}
-MySQL service type is set to `ClusterIP`, meaning that it is not accessible from outside of the cluster. There are multiple ways to connect to it, for example creating a `NodePort` service and instructing Minikube to forward the connection.
+MariaDB service type is set to `ClusterIP`, meaning that it is not accessible from outside of the cluster. There are multiple ways to connect to it, for example creating a `NodePort` service and instructing Minikube to forward the connection.
 
 ```yaml
-# mysql-nodeport-service.yaml
+# mariadb-nodeport-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-nodeport
+  name: mariadb-nodeport
 spec:
   selector:
-    app.kubernetes.io/name: mysql
+    app.kubernetes.io/name: mariadb
   type: NodePort
   ports:
     - port: 3306
@@ -129,11 +138,11 @@ spec:
 Then install the service using `kubectl` and forward the connection:
 
 ```bash
-kubectl apply -f mysql-nodeport-service.yaml
-minikube service mysql-nodeport
+kubectl apply -f mariadb-nodeport-service.yaml
+minikube service mariadb-nodeport
 ```
 
-Note that the port number changes each time you run `minikube service mysql-nodeport`.
+Note that the port number changes each time you run `minikube service mariadb-nodeport`.
 
 {{< /admonition >}}
 
@@ -194,7 +203,7 @@ Modify specific properties from the [original chart's values.yaml file](https://
 - Revise `MAUTIC_ADMIN_*` related credentials,
 - Configure `MAUTIC_MAILER_DSN` to `smtp://mailhog.default.svc.cluster.local:1025` for Mailhog SMTP integration,
 - Modify the HTTP health-check probe to respond to 200 status code instead of 301,
-- Update `db` properties, setting the host to `mysql.default.svc.cluster.local` and adjusting user credentials accordingly
+- Update `db` properties, setting the host to `mariadb.default.svc.cluster.local` and adjusting user credentials accordingly
 - Enable `ingress` mode by setting the service host to `mautic.local`
 
 Optional adjustments::
@@ -328,7 +337,7 @@ You can reference Mautic Developer docs for a full API reference [here](https://
 
 ## Jobs
 
-Mautic's architecture separates the web application from background processing—a pattern familiar to anyone who's built data pipelines. Events (page hits, email opens, form submissions) are written to a Doctrine message queue in MySQL, then processed asynchronously by cron-triggered consumers.
+Mautic's architecture separates the web application from background processing—a pattern familiar to anyone who's built data pipelines. Events (page hits, email opens, form submissions) are written to a Doctrine message queue in MariaDB, then processed asynchronously by cron-triggered consumers.
 
 Understanding this architecture matters for two reasons: you need to configure the jobs correctly for Mautic to function, and if you're building integrations, knowing when data becomes consistent helps you avoid race conditions.
 
@@ -390,7 +399,7 @@ When you issue the `php bin/console` command without any arguments, you will see
 
 With Mautic running, you have direct access to several valuable data sources:
 
-**MySQL tables worth exploring:**
+**MariaDB tables worth exploring:**
 
 - `leads` - Contact records with all custom fields
 - `lead_event_log` - Complete interaction history per contact
@@ -399,7 +408,7 @@ With Mautic running, you have direct access to several valuable data sources:
 
 **Integration patterns:**
 
-- **CDC to warehouse**: Use Debezium or similar to stream changes from MySQL to your data warehouse for unified customer analytics
+- **CDC to warehouse**: Use Debezium or similar to stream changes from MariaDB to your data warehouse for unified customer analytics
 - **Real-time scoring**: Tap into the message queue to trigger ML-based lead scoring before Mautic processes the event
 - **Reverse ETL**: Push enriched segments from your warehouse back to Mautic via the API
 
@@ -409,9 +418,14 @@ For production use:
 
 - Deploy on a cloud provider with SSL/TLS termination at the ingress level
 - Configure a production SMTP provider (SendGrid, Postmark, AWS SES)
-- Set up MySQL backups and point-in-time recovery
+- Set up MariaDB backups and point-in-time recovery
 - Build a data pipeline to sync contacts from your source systems
 
 The operational overhead is real, but if you need tight integration between marketing automation and your data platform, self-hosting gives you options that SaaS vendors simply don't offer.
 
-{{< subscribe headline="Get the Mautic K8s Starter Kit" description="All YAML files from this guide in one zip: Helm values, MySQL NodePort service, ConfigMaps, and a recommended cron job schedule matrix. Copy-paste ready." campaign="mautic-5x-kubernetes-setup" lead_magnet="mautic-k8s-starter-kit" button="Get the Kit" >}}
+{{< gumroad
+    url="https://nkozlovski.gumroad.com/l/rqgdwj"
+    headline="Get the Mautic K8s Starter Kit"
+    description="Complete deployment guide plus 5 ready-to-use YAML files: MariaDB values, Mailhog values, Mautic values, NodePort service, and favicon ConfigMap."
+    button="Download Free"
+>}}

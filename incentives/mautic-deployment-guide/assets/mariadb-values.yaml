@@ -1,0 +1,12 @@
+auth:
+  rootPassword: myRootPassword
+  database: mautic
+  username: mautic
+  password: mauticPassword
+
+primary:
+  persistence:
+    size: 2Gi
+
+metrics:
+  enabled: true

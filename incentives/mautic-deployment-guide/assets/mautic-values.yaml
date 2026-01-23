@@ -13,7 +13,7 @@ mautic:
     MAUTIC_MESSENGER_DSN_HIT: "doctrine://default"
     MAUTIC_API_ENABLED: "1"
     MAUTIC_API_ENABLE_BASIC_AUTH: "true"
-    MAUTIC_IP_LOOKUP_AUTH: "<user id>:<license>"
+    MAUTIC_IP_LOOKUP_AUTH: "<YOUR_MAXMIND_ACCOUNT_ID>:<YOUR_MAXMIND_LICENSE_KEY>"
   
   # existingSecret: ""
   # ignore the following values if existingSecret is set
@@ -81,7 +81,7 @@ mautic:
     # existingConfigMap: ""
     # ignore the following values if existingConfigMap is set
     configMap:
-      MAUTIC_DB_HOST: mysql.default.svc.cluster.local
+      MAUTIC_DB_HOST: mariadb.default.svc.cluster.local
       MAUTIC_DB_PORT: "3306"
       MAUTIC_DB_NAME: mautic
 

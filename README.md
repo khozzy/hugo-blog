@@ -6,37 +6,62 @@ Tag line: "Help Developers to get results with data products"
 
     git submodule add https://github.com/dillonzq/LoveIt.git themes/LoveIt
 
-## Using the Subscribe Shortcode
+## Incentives (Lead Magnets)
 
-In any post, you can add a custom subscribe form:
+Lead magnets are PDFs built from markdown and distributed via Gumroad.
+
+### Building Gumroad Bundles
+
+```bash
+just incentives                    # Build all
+just incentive <product-slug>      # Build one
+```
+
+### Structure
+
+```
+incentives/<product-slug>/
+├── content.md      # PDF source
+└── assets/         # Bundled files
+
+dist/incentives/    # Output (gitignored)
+```
+
+### Using the Gumroad Shortcode
+
+Link to a Gumroad product in blog posts:
 
 ```markdown
-{{</* subscribe
-  headline="Get the Iceberg Migration Checklist"
-  description="12 steps I use for every migration"
-  campaign="iceberg-checklist"
-  lead_magnet="iceberg-checklist"
-  button="Get the Checklist"
+{{</* gumroad
+  url="https://yourname.gumroad.com/l/product"
+  headline="Get the Guide"
+  description="Step-by-step checklist."
+  button="Download Free"
 */>}}
 ```
 
-Format it in a single line to prevent formatting issues.
+### Workflow
 
-## Per-Post Configuration
+1. Create `incentives/<slug>/content.md`
+2. Build: `just incentive <slug>`
+3. Upload PDF to Gumroad ($0 product)
+4. Add shortcode to blog post with Gumroad URL
+5. Gumroad → Beehiiv webhook syncs subscribers
 
-Override defaults in post front matter:
+## Subscribe Shortcode (Email Capture)
 
-```yaml
-params:
-  subscribe:
-    headline: "Get the companion checklist"
-    description: "Download the PDF with all steps"
-    campaign: "my-campaign"
-    lead_magnet: "my-lead-magnet"
-    button: "Download"
+For inline email capture without a lead magnet:
+
+```markdown
+{{</* subscribe
+  headline="Stay updated"
+  description="Join engineers who get deep-dives on data architecture."
+  campaign="newsletter"
+  button="Subscribe"
+*/>}}
 ```
 
-To disable the subscribe form on a specific post:
+To disable the end-of-post subscribe form:
 
 ```yaml
 params:
