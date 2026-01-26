@@ -212,8 +212,6 @@ Optional adjustments::
 - Enable API access by setting both `MAUTIC_API_ENABLED: "1"` and `MAUTIC_API_ENABLE_BASIC_AUTH: "true"`,
 - Add geo IP lookup table credentials by setting the `MAUTIC_IP_LOOKUP_AUTH` variable.
 
-You can reference the example of the desired `mautic-values.yaml` file [here](files/mautic-values.yml).
-
 {{< admonition info "Persisting other configuration options">}}
 By default, the `config/local.php` config file is set to be read-only, which prevents you from manually configuring the service. However, you can temporarily relax the permissions to look up the file after changes and persist them in your `mautic-values.yaml`.
 
