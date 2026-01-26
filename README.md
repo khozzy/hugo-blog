@@ -4,7 +4,24 @@ Tag line: "Help Developers to get results with data products"
 
 ## Development mode
 
-    git submodule add https://github.com/dillonzq/LoveIt.git themes/LoveIt
+```bash
+git submodule add https://github.com/dillonzq/LoveIt.git themes/LoveIt
+```
+
+## Analytics (in progress)
+
+### Metrics to Track
+
+**Leading**: Post engagement, blog traffic, subscriber growth, comment quality
+**Lagging**: Inbound opportunities, DMs from target audience, brand recognition
+
+### Strategy Review
+
+1. Ask about recent engagement data
+2. Identify patterns - what resonates?
+3. Suggest experiments
+4. Challenge assumptions
+5. Prioritize audience trust over quick wins
 
 ## Incentives (Lead Magnets)
 
@@ -71,8 +88,8 @@ params:
 
 # TODO:
 
-- Tagline
-- Blog name
-- Content review skill (roast, gaps)
-- Blog pages and general layout
-- SEO expert
+[x] Tagline
+[x] Blog name
+[ ] Dark mode
+[ ] Content review skill (roast, gaps)
+[ ] SEO agent/skill
