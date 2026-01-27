@@ -3,7 +3,7 @@ title: "Activity Schema: The Data Model That Fixed My QA Debugging"
 slug: activity-schema
 date: 2025-06-04T08:00:00+01:00
 author: Norbert
-draft: true
+draft: false
 summary: "One table. Temporal joins. No foreign keys. Activity Schema is a radical simplification for event analytics - here's when it makes sense and what tradeoffs to expect."
 params:
   toc: true
