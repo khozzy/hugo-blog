@@ -26,9 +26,9 @@
     --text-tertiary: #8a8680;
     --border-color: #e8e6e1;
 
-    /* Code */
-    --code-bg: #1e1e1e;
-    --code-text: #d4d4d4;
+    /* Code - warm sand theme for print-friendly readability */
+    --code-bg: #f5f2eb;
+    --code-text: #3d3833;
 
     /* Typography */
     --font-display: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -318,7 +318,8 @@ pre {
     background-color: var(--code-bg);
     border-radius: 8px;
     /* overflow-x not supported in WeasyPrint - PDF handles overflow differently */
-    page-break-inside: avoid;
+    /* Allow breaking across pages to prevent huge gaps with long code blocks */
+    page-break-inside: auto;
 }
 
 pre code {
@@ -333,14 +334,14 @@ pre code {
     white-space: pre;
 }
 
-/* Syntax highlighting placeholders */
-pre code .kw { color: #569cd6; } /* Keywords */
-pre code .dt { color: #4ec9b0; } /* Data types */
-pre code .st { color: #ce9178; } /* Strings */
-pre code .co { color: #6a9955; } /* Comments */
-pre code .fu { color: #dcdcaa; } /* Functions */
-pre code .op { color: #d4d4d4; } /* Operators */
-pre code .cn { color: #b5cea8; } /* Constants/numbers */
+/* Syntax highlighting - light theme colors for warm sand background */
+pre code .kw { color: #8250df; } /* Keywords - purple */
+pre code .dt { color: #0969da; } /* Data types - blue */
+pre code .st { color: #0a3069; } /* Strings - dark blue */
+pre code .co { color: #6e7781; } /* Comments - gray */
+pre code .fu { color: #8250df; } /* Functions - purple */
+pre code .op { color: #3d3833; } /* Operators - warm dark */
+pre code .cn { color: #0550ae; } /* Constants/numbers - blue */
 
 /* ============================================
    Tables
@@ -518,8 +519,8 @@ h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
 }
 
-/* Keep code blocks and tables together */
-pre, table, figure, blockquote {
+/* Keep tables, figures, and blockquotes together (code blocks can break) */
+table, figure, blockquote {
     page-break-inside: avoid;
 }
 
