@@ -999,7 +999,8 @@ blockquote.highlight-quote {
         z-index: 1;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--subscribe-gold);
         box-shadow:
             0 1px 0 var(--subscribe-gold-dark),
@@ -1033,7 +1034,8 @@ blockquote.highlight-quote {
     margin: 0 0 0.75rem 0;
     color: var(--subscribe-ink);
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         color: var(--subscribe-ink);
     }
 }
@@ -1047,7 +1049,8 @@ blockquote.highlight-quote {
     line-height: 1.55;
     max-width: 36ch;
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         color: var(--subscribe-ink-soft);
     }
 }
@@ -1106,7 +1109,8 @@ blockquote.highlight-quote {
         cursor: not-allowed;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--subscribe-cream);
         border-color: var(--subscribe-ink);
         color: var(--subscribe-ink);
@@ -1175,7 +1179,8 @@ blockquote.highlight-quote {
         cursor: not-allowed;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--subscribe-ink);
         color: var(--subscribe-cream);
 
@@ -1222,7 +1227,8 @@ blockquote.highlight-quote {
         font-weight: 600;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--subscribe-cream);
         color: #166534;
         border-color: #166534;
@@ -1238,7 +1244,8 @@ blockquote.highlight-quote {
         font-weight: 600;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--subscribe-cream);
         color: #991b1b;
         border-color: #991b1b;
@@ -1293,7 +1300,8 @@ blockquote.highlight-quote {
         box-shadow: 0 0 12px var(--scenario-accent-glow);
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         --scenario-bg: linear-gradient(135deg, #1a1f2e 0%, #151922 100%);
         --scenario-text: #e2e8f0;
         --scenario-subtext: #94a3b8;
@@ -1543,7 +1551,8 @@ blockquote.highlight-quote {
         z-index: 1;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--gumroad-gold);
         box-shadow:
             0 1px 0 var(--gumroad-gold-dark),
@@ -1565,11 +1574,12 @@ blockquote.highlight-quote {
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
-    margin: 0 0 0.5rem 0;
-    color: var(--gumroad-ink);
+    margin: 0 0 0.5rem 0 !important;
+    color: var(--gumroad-ink) !important;
 
-    [data-theme='dark'] & {
-        color: var(--gumroad-ink);
+    [theme="dark"] &,
+    [data-theme="dark"] & {
+        color: var(--gumroad-ink) !important;
     }
 }
 
@@ -1577,13 +1587,14 @@ blockquote.highlight-quote {
     font-family: var(--font-body);
     font-size: 1rem;
     font-weight: 400;
-    color: var(--gumroad-ink-soft);
-    margin: 0;
+    color: var(--gumroad-ink-soft) !important;
+    margin: 0 !important;
     line-height: 1.5;
     max-width: 42ch;
 
-    [data-theme='dark'] & {
-        color: var(--gumroad-ink-soft);
+    [theme="dark"] &,
+    [data-theme="dark"] & {
+        color: var(--gumroad-ink-soft) !important;
     }
 }
 
@@ -1660,7 +1671,8 @@ blockquote.highlight-quote {
         pointer-events: none;
     }
 
-    [data-theme='dark'] & {
+    [theme="dark"] &,
+    [data-theme="dark"] & {
         background: var(--gumroad-ink) !important;
         background-color: var(--gumroad-ink) !important;
         color: var(--gumroad-cream) !important;
