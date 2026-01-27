@@ -27,7 +27,7 @@ def run_docker(cmd: list[str]) -> None:
 def build_incentive(name: str, project_root: Path) -> None:
     """Build a single incentive: markdown -> html -> pdf, zip assets."""
     incentive_dir = project_root / "incentives" / name
-    dist_dir = project_root / "dist" / "incentives"
+    dist_dir = project_root / "dist" / "incentives" / name
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     content_file = incentive_dir / "content.md"
@@ -37,8 +37,8 @@ def build_incentive(name: str, project_root: Path) -> None:
 
     print(f"Building: {name}")
 
-    html_file = dist_dir / f"{name}.html"
-    pdf_file = dist_dir / f"{name}.pdf"
+    html_file = dist_dir / "content.html"
+    pdf_file = dist_dir / "content.pdf"
 
     # Markdown -> HTML (pandoc)
     run_docker(
@@ -53,9 +53,9 @@ def build_incentive(name: str, project_root: Path) -> None:
             "pandoc/extra",
             f"/data/incentives/{name}/content.md",
             "-o",
-            f"/data/dist/incentives/{name}.html",
+            f"/data/dist/incentives/{name}/content.html",
             "--css=/data/assets/pdf/kozlovski-pdf.css",
-            f"--resource-path=/data/incentives/{name}/assets",
+            f"--resource-path=/data/incentives/{name}:/data/incentives/{name}/assets",
             "--embed-resources",
             "--standalone",
         ]
@@ -72,8 +72,8 @@ def build_incentive(name: str, project_root: Path) -> None:
             "-v",
             f"{project_root}:/data",
             "minidocks/weasyprint:latest",
-            f"/data/dist/incentives/{name}.html",
-            f"/data/dist/incentives/{name}.pdf",
+            f"/data/dist/incentives/{name}/content.html",
+            f"/data/dist/incentives/{name}/content.pdf",
         ]
     )
 
@@ -84,7 +84,7 @@ def build_incentive(name: str, project_root: Path) -> None:
     # Bundle assets if directory exists and has files
     assets_dir = incentive_dir / "assets"
     if assets_dir.is_dir() and any(assets_dir.iterdir()):
-        zip_file = dist_dir / f"{name}-assets.zip"
+        zip_file = dist_dir / "assets.zip"
         zip_file.unlink(missing_ok=True)
         with zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED) as zf:
             for asset in assets_dir.iterdir():
