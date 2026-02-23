@@ -6,6 +6,7 @@ Tag line: "Help Developers to get results with data products"
 
 ```bash
 git submodule add https://github.com/dillonzq/LoveIt.git themes/LoveIt
+git submodule update --init --recursive
 ```
 
 ## Analytics (in progress)
