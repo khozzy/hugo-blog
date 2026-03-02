@@ -1719,6 +1719,164 @@ blockquote.highlight-quote {
 }
 
 // ============================================
+// Thank-You Page
+// ============================================
+.thank-you-page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--space-2xl) var(--space-md);
+}
+
+.thank-you-hero {
+    text-align: center;
+    margin-bottom: var(--space-2xl);
+}
+
+.thank-you-checkmark {
+    font-size: 3.5rem;
+    color: var(--accent);
+    margin-bottom: var(--space-lg);
+    animation: checkPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes checkPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.thank-you-tagline {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: var(--space-sm);
+}
+
+.thank-you-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+    line-height: 1.2;
+}
+
+.thank-you-description {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.thank-you-downloads {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+}
+
+.thank-you-download-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--accent);
+        text-decoration: none;
+        color: var(--text-primary);
+
+        .thank-you-download-action {
+            color: var(--accent);
+        }
+    }
+
+    &::after {
+        content: none !important;
+        display: none !important;
+    }
+}
+
+.thank-you-download-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-subtle);
+    border-radius: 10px;
+    font-size: 1.25rem;
+    color: var(--accent);
+}
+
+.thank-you-download-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.thank-you-download-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.thank-you-download-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.thank-you-download-action {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    color: var(--text-tertiary);
+    transition: color 0.2s ease;
+}
+
+.thank-you-related {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--space-lg);
+    text-align: center;
+
+    p {
+        font-size: 0.9rem;
+        color: var(--text-tertiary);
+        margin-bottom: var(--space-sm);
+    }
+
+    a {
+        font-family: var(--font-display);
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--accent);
+        }
+    }
+}
+
+// ============================================
 // Print Styles
 // ============================================
 @media print {

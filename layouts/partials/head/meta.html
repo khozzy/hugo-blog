@@ -1,5 +1,9 @@
 {{- $params := .Scratch.Get "params" -}}
 
+{{- if $params.noindex -}}
+<meta name="robots" content="noindex, nofollow">
+{{- end -}}
+
 <meta name="Description" content="{{ $params.description | default .Site.Params.description }}">
 
 {{- template "_internal/opengraph.html" . -}}

@@ -218,7 +218,13 @@ LEFT JOIN append a
 
 Aggregate and In Between patterns follow similar logic with `GROUP BY` and `LEAD()` window functions respectively.
 
-{{< gumroad url="https://nkozlovski.gumroad.com/l/kopcm" headline="Get the SQL Cheat Sheet" description="All 12 temporal join patterns as runnable DuckDB examples. Dialect reference included for BigQuery, Snowflake, and Redshift." button="Download Free" >}}
+{{< subscribe
+  headline="Get the Temporal Joins Cheat Sheet"
+  description="All 12 temporal join patterns as runnable DuckDB examples, plus a dialect reference for BigQuery, Snowflake, and Redshift."
+  campaign="activity-schema"
+  lead_magnet="temporal-joins-cheatsheet"
+  button="Send the Cheat Sheet"
+>}}
 
 ## Relationships in Practice
 
@@ -419,4 +425,10 @@ If you're drowning in joins, debugging event sequences, or building a Customer 3
 
 The spec lives at [activityschema.com](https://www.activityschema.com). The ideas are simple enough to fit on one page - which might be the strongest argument for trying it.
 
-{{< gumroad url="https://nkozlovski.gumroad.com/l/kopcm" headline="Don't Rewrite These From Memory" description="12 copy-paste SQL patterns with generic templates and worked examples for each." button="Download Free" >}}
+{{< subscribe
+  headline="Don't Rewrite Temporal Joins From Memory"
+  description="Get the Temporal Joins Cheat Sheet with 12 copy-paste SQL patterns, generic templates, and worked examples."
+  campaign="activity-schema"
+  lead_magnet="temporal-joins-cheatsheet"
+  button="Send the Cheat Sheet"
+>}}

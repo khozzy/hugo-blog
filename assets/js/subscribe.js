@@ -72,6 +72,14 @@
   }
 
   /**
+   * Redirect to worker-provided success page
+   */
+  function redirectTo(url) {
+    const redirectUrl = new URL(url, window.location.origin);
+    window.location.assign(redirectUrl.toString());
+  }
+
+  /**
    * Handle form submission
    */
   async function handleSubmit(event) {
@@ -119,8 +127,18 @@
       const result = await response.json();
 
       if (response.ok && result.success) {
-        showMessage(form, result.message || 'Successfully subscribed!', false);
         trackConversion(campaign, leadMagnet);
+
+        if (result.redirect_url) {
+          try {
+            redirectTo(result.redirect_url);
+            return;
+          } catch (error) {
+            console.error('Subscribe redirect error:', error);
+          }
+        }
+
+        showMessage(form, result.message || 'Check your email to confirm your subscription.', false);
 
         // Clear input
         if (input) {

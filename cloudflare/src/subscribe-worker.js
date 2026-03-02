@@ -13,16 +13,47 @@
  */
 
 const BEEHIIV_API_URL = 'https://api.beehiiv.com/v2';
+const CANONICAL_SITE_URL = 'https://kozlov.ski';
+const GENERIC_THANK_YOU_PATH = '/thank-you/';
+
+// These URLs are intended for downstream Beehiiv merge tags / automations.
+const INCENTIVE_URLS = {
+  'temporal-joins-cheatsheet': `${CANONICAL_SITE_URL}/thank-you/temporal-joins-cheatsheet/`,
+};
+
+const CAMPAIGN_INCENTIVE_URLS = {};
+
+function getAllowedOrigins(allowedOrigins) {
+  return (allowedOrigins || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function parseUrl(value) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Check if the origin is allowed
  */
 function isOriginAllowed(origin, allowedOrigins) {
   if (!origin) return false;
-  const origins = allowedOrigins.split(',').map((o) => o.trim());
-  return origins.some((allowed) => {
+  return getAllowedOrigins(allowedOrigins).some((allowed) => {
     if (allowed.includes('*')) {
-      const pattern = new RegExp('^' + allowed.replace(/\*/g, '.*') + '$');
+      const pattern = new RegExp('^' + escapeRegex(allowed).replace(/\\\*/g, '.*') + '$');
       return pattern.test(origin);
     }
     return origin === allowed;
@@ -52,6 +83,88 @@ function getCorsHeaders(origin, allowedOrigins) {
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+function getSuccessRedirectUrl(origin, pageUrl, allowedOrigins) {
+  if (isOriginAllowed(origin, allowedOrigins)) {
+    return new URL(GENERIC_THANK_YOU_PATH, origin).toString();
+  }
+
+  const parsedPageUrl = parseUrl(pageUrl);
+  if (parsedPageUrl && isOriginAllowed(parsedPageUrl.origin, allowedOrigins)) {
+    return new URL(GENERIC_THANK_YOU_PATH, parsedPageUrl.origin).toString();
+  }
+
+  return new URL(GENERIC_THANK_YOU_PATH, CANONICAL_SITE_URL).toString();
+}
+
+function getIncentiveUrl(leadMagnet, campaign) {
+  if (leadMagnet && INCENTIVE_URLS[leadMagnet]) {
+    return INCENTIVE_URLS[leadMagnet];
+  }
+
+  if (campaign && CAMPAIGN_INCENTIVE_URLS[campaign]) {
+    return CAMPAIGN_INCENTIVE_URLS[campaign];
+  }
+
+  return '';
+}
+
+function buildCustomFields(leadMagnet, campaign) {
+  const customFields = [];
+  const welcomeVariant = leadMagnet || campaign || 'newsletter';
+  const incentiveUrl = getIncentiveUrl(leadMagnet, campaign);
+
+  if (leadMagnet) {
+    customFields.push({
+      name: 'lead_magnet',
+      value: leadMagnet,
+    });
+  }
+
+  if (campaign) {
+    customFields.push({
+      name: 'signup_campaign',
+      value: campaign,
+    });
+  }
+
+  customFields.push({
+    name: 'signup_source',
+    value: 'website',
+  });
+
+  customFields.push({
+    name: 'welcome_variant',
+    value: welcomeVariant,
+  });
+
+  if (incentiveUrl) {
+    customFields.push({
+      name: 'incentive_url',
+      value: incentiveUrl,
+    });
+  }
+
+  return customFields;
+}
+
+async function parseJsonResponse(response) {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text };
+  }
+}
+
+function getBeehiivError(result) {
+  return result?.errors?.[0]?.message || result?.message || 'Subscription failed';
 }
 
 /**
@@ -106,6 +219,7 @@ async function handleSubscribe(request, env) {
     email: email,
     reactivate_existing: false,
     send_welcome_email: true,
+    double_opt_override: 'on',
   };
 
   // Add UTM parameters
@@ -120,18 +234,14 @@ async function handleSubscribe(request, env) {
     payload.referring_site = page_url;
   }
 
-  // Add custom fields (lead_magnet)
-  if (lead_magnet) {
-    payload.custom_fields = [
-      {
-        name: 'lead_magnet',
-        value: lead_magnet,
-      },
-    ];
+  const customFields = buildCustomFields(lead_magnet, campaign);
+  if (customFields.length > 0) {
+    payload.custom_fields = customFields;
   }
 
   // Call Beehiiv API
   try {
+    const redirectUrl = getSuccessRedirectUrl(origin, page_url, env.ALLOWED_ORIGINS);
     const response = await fetch(
       `${BEEHIIV_API_URL}/publications/${env.BEEHIIV_PUBLICATION_ID}/subscriptions`,
       {
@@ -144,14 +254,17 @@ async function handleSubscribe(request, env) {
       }
     );
 
-    const result = await response.json();
-    console.log(result);
+    const result = await parseJsonResponse(response);
+    console.log('Beehiiv subscribe result:', {
+      status: response.status,
+      beehiivStatus: result?.data?.status,
+    });
 
     if (!response.ok) {
       console.error('Beehiiv API error:', result);
       return new Response(
         JSON.stringify({
-          error: result.message || 'Subscription failed',
+          error: getBeehiivError(result),
         }),
         {
           status: response.status,
@@ -163,7 +276,9 @@ async function handleSubscribe(request, env) {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Successfully subscribed!',
+        message: 'Check your email to confirm your subscription.',
+        redirect_url: redirectUrl,
+        status: result?.data?.status,
       }),
       {
         status: 200,

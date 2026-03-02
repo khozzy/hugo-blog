@@ -1,0 +1,44 @@
+{{- $params := .Scratch.Get "params" | default .Params -}}
+{{- $ty := $params.thankyou | default dict -}}
+{{- $relatedLabel := "Continue reading the full article:" -}}
+
+<article class="page single thank-you-page">
+    <div class="thank-you-hero">
+        <div class="thank-you-checkmark">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <p class="thank-you-tagline">{{ $ty.tagline | default "Thanks for subscribing" }}</p>
+        <h1 class="thank-you-title">{{ .Title }}</h1>
+        {{- with $ty.description -}}
+        <p class="thank-you-description">{{ . }}</p>
+        {{- end -}}
+    </div>
+
+    {{- with $ty.downloads -}}
+    <div class="thank-you-downloads">
+        {{- range . -}}
+        <a href="{{ .url }}" class="thank-you-download-card" download>
+            <div class="thank-you-download-icon">
+                <i class="{{ .icon | default "fas fa-file-download" }}"></i>
+            </div>
+            <div class="thank-you-download-info">
+                <span class="thank-you-download-name">{{ .name }}</span>
+                {{- with .description -}}
+                <span class="thank-you-download-desc">{{ . }}</span>
+                {{- end -}}
+            </div>
+            <div class="thank-you-download-action">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+        </a>
+        {{- end -}}
+    </div>
+    {{- end -}}
+
+    {{- with $ty.related_post -}}
+    <div class="thank-you-related">
+        <p>{{ .label | default $relatedLabel }}</p>
+        <a href="{{ .url }}">{{ .title }} &rarr;</a>
+    </div>
+    {{- end -}}
+</article>

@@ -57,7 +57,12 @@ The newsletter subscription form uses a Cloudflare Worker to securely proxy requ
 
 ### Beehiiv Setup
 
-1. Create a custom field named `lead_magnet` in Beehiiv dashboard (Settings > Custom Fields)
+1. Create custom fields in Beehiiv dashboard (Settings > Custom Fields):
+   - `lead_magnet`
+   - `signup_campaign`
+   - `signup_source`
+   - `welcome_variant`
+   - `incentive_url`
 2. Get your API key from Beehiiv settings
 3. Note your Publication ID
 
@@ -77,7 +82,13 @@ curl -X POST https://beehiiv-subscribe-proxy.nkozlowski.workers.dev/subscribe \
     "page_url": "https://kozlov.ski/posts/testo"
   }'
 
-# Expected response: {"success":true,"message":"Successfully subscribed!"}
+# Expected response:
+# {
+#   "success": true,
+#   "message": "Check your email to confirm your subscription.",
+#   "redirect_url": "https://kozlov.ski/thank-you/",
+#   "status": "validating"
+# }
 
 # Error case (invalid email)
 curl -X POST api.kozlov.ski/subscribe \
