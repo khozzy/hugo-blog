@@ -105,7 +105,7 @@ I expected a simple identity to hold: `unit_price - discount ≈ net_price`. It 
 
 When I checked within-day price consistency for the same item at the same store, the results were worse. For every `(date, store_id, item_id)` group with multiple rows, I computed the max/min price ratio. Most flagged groups had ratios in the 2-5x range, but the distribution had a long tail stretching to 75x and beyond. A significant cluster of cases had minimum prices at or below zero — returns, voids, or inventory adjustments dragging the floor price negative while the max reflected the normal shelf price. The typical causes: line-level vs. basket-level discounts recorded differently, mixed pack sizes under one product ID, returns posted as negative price lines.
 
-![Within-day price consistency](price_consistency.png "Left: scatter plot of min vs. max net price within each day-store-item group. Points above the diagonal indicate price spread; orange marks groups where the minimum price was zero or negative. Right: distribution of the max/min price ratio, clipped at the 99th percentile — most groups cluster around 2-5x, but the tail extends well beyond 75x.")
+![Within-day price consistency](images/price_consistency.png "Left: scatter plot of min vs. max net price within each day-store-item group. Points above the diagonal indicate price spread; orange marks groups where the minimum price was zero or negative. Right: distribution of the max/min price ratio, clipped at the 99th percentile — most groups cluster around 2-5x, but the tail extends well beyond 75x.")
 
 Why it matters? If your model learns "when price drops, demand rises," but the price data is incoherent, the model is learning noise. Price elasticity estimates become meaningless.
 
@@ -164,13 +164,13 @@ A typical product is listed at a store for over four months, but only sells on 7
 
 The zero-share distribution told the real story — and it was bimodal.
 
-![Distribution of zero share across active windows](zero_shares.png "Zero share = fraction of days with no sales within each item's active listing window. Over 60% of store-item pairs spend most of their lifespan with zero sales — a strong signal of highly intermittent demand.")
+![Distribution of zero share across active windows](images/zero_shares.png "Zero share = fraction of days with no sales within each item's active listing window. Over 60% of store-item pairs spend most of their lifespan with zero sales — a strong signal of highly intermittent demand.")
 
 **57% of all active windows had a zero share near 1.0**, meaning almost every day within the window had no sales. On the other end, **33.6% had a zero share near 0.0** — items that sold on most days they were listed. Almost nothing fell in between. The dataset wasn't "a bit sparse." It was two completely different populations masquerading as one.
 
 When I plotted zero share against lifespan, the pattern crystallized.
 
-![Zero-share vs lifespan density](zero_shares_lifespan.png "Each dot is a store-item active window. The mass concentrates near 100% zero share — continuous demand patterns (near 0.0) exist almost exclusively for short-lived listings. Once an item has been listed for more than ~50 days, its zero share converges to 0.95-1.0.")
+![Zero-share vs lifespan density](images/zero_shares_lifespan.png "Each dot is a store-item active window. The mass concentrates near 100% zero share — continuous demand patterns (near 0.0) exist almost exclusively for short-lived listings. Once an item has been listed for more than ~50 days, its zero share converges to 0.95-1.0.")
 
 As an item's lifespan exceeds ~50 days, its zero share converges to 0.95-1.0. The longer an item stays listed, the more intermittent it looks. Items with short lifespans (<10 days) showed more variation — some sold every day of their brief life, others sold once and then disappeared. But for anything listed more than a couple of months, the trajectory was almost deterministic: the zero share approached 0.97 and stayed there.
 
@@ -213,7 +213,7 @@ The SBC framework matters because it directly prescribes the modeling approach. 
 
 When I classified the ~199K store-item pairs, the results were stark and surprisingly clean:
 
-![Syntetos-Boylan demand classes](sbc.png "SBC classification of ~199K store-item active windows. Two-thirds are lumpy — rare sales in unpredictable quantities. The middle quadrants (erratic and intermittent) are virtually empty.")
+![Syntetos-Boylan demand classes](images/sbc.png "SBC classification of ~199K store-item active windows. Two-thirds are lumpy — rare sales in unpredictable quantities. The middle quadrants (erratic and intermittent) are virtually empty.")
 
 Two-thirds of all store-item combinations were **lumpy** — selling rarely AND in unpredictable quantities when they did sell. The remaining third was **smooth**. The middle quadrants (erratic and intermittent) were virtually empty. This dataset didn't have a spectrum of demand patterns. It had two modes: items that sell predictably, and items that barely sell at all.
 
@@ -228,7 +228,7 @@ Two-thirds of all store-item combinations were **lumpy** — selling rarely AND 
 
 A Lorenz curve of sales volume completed the picture.
 
-![Pareto (Lorenz) curve of demand volume](pareto.png "Cumulative share of windows (sorted by volume) vs. cumulative share of total demand. The color gradient maps zero share — green (continuous demand) dominates the high-volume head, red (highly intermittent) fills the long tail. The dotted line marks the 80/20 split.")
+![Pareto (Lorenz) curve of demand volume](images/pareto.png "Cumulative share of windows (sorted by volume) vs. cumulative share of total demand. The color gradient maps zero share — green (continuous demand) dominates the high-volume head, red (highly intermittent) fills the long tail. The dotted line marks the 80/20 split.")
 
 Just **19% of store-item windows generate ~80% of total demand volume** — this segment carries the business. The gap between the Lorenz curve and the equality line is enormous, confirming extreme concentration. After ~70-80% of the population, adding more windows yields tiny incremental volume — diminishing returns in textbook form.
 
