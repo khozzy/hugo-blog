@@ -16,8 +16,7 @@ Usage:
 
     {{- $defaults := .Site.Params.subscribe -}}
     {{- $headline := .Get "headline" | default $defaults.headline | default "Want more like this?" -}}
-    {{- $description := .Get "description" | default $defaults.description | default "Join engineers who get deep-dives
-    on data architecture." -}}
+    {{- $description := .Get "description" | default $defaults.description | default "Join engineers who get deep-dives on data architecture." -}}
     {{- $campaign := .Get "campaign" | default "" -}}
     {{- $leadMagnet := .Get "lead_magnet" | default "" -}}
     {{- $button := .Get "button" | default "Subscribe" -}}
