@@ -52,25 +52,19 @@ describe('handleSubscribe', () => {
     expect(res.status).toBe(400);
   });
 
-  // --- New subscriber (GET miss, probe creates new) ---
+  // --- New subscriber (GET miss → single create POST) ---
 
   it('returns pending_verification for new subscriber', async () => {
-    const now = new Date().toISOString();
     vi.stubGlobal('fetch', buildFetchMock([
       // GET search → empty
       {
         match: (url) => url.includes('/subscribers?email='),
         response: { data: [] },
       },
-      // POST probe → new subscriber (created just now)
+      // POST create → success
       {
         match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
-        response: { data: { id: 1, email: 'new@example.com', created: now } },
-      },
-      // GET by ID → full subscriber data
-      {
-        match: (url) => url.match(/\/subscribers\/\d+$/),
-        response: { data: senderSubscriber({ id: 1, email: 'new@example.com', created: now }) },
+        response: { data: { id: 1, email: 'new@example.com' } },
       },
     ]));
 
@@ -196,134 +190,105 @@ describe('handleSubscribe', () => {
     expect(capturedBody.fields.lead_magnets).toBe('second-cheatsheet,temporal-joins-cheatsheet');
   });
 
-  // --- Existing unverified via probe (GET miss, old created timestamp) ---
+  // --- Regression: leading comma + email_verified preservation ---
 
-  it('returns existing_unverified when probe reveals old unverified subscriber', async () => {
-    const oldDate = new Date(Date.now() - 60000).toISOString(); // 60s ago
-    const sub = senderSubscriber({ id: 50, email: 'old@example.com', created: oldDate, email_verified: 'no' });
+  it('does not produce leading comma when subscriber has no prior lead magnets', async () => {
+    const sub = senderSubscriber({ email: 'verified@example.com', email_verified: 'yes', lead_magnets: '' });
 
+    let capturedBody;
     vi.stubGlobal('fetch', buildFetchMock([
-      // GET search → empty (indexing delay)
+      {
+        match: (url) => url.includes('/subscribers?email='),
+        response: { data: [sub] },
+      },
+      {
+        match: (url) => url.match(/\/subscribers\/\d+$/),
+        response: { data: sub },
+      },
+      {
+        match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
+        response: (url, opts) => {
+          capturedBody = JSON.parse(opts.body);
+          return { data: sub };
+        },
+      },
+    ]));
+
+    const req = makeSubscribeRequest({ email: 'verified@example.com', lead_magnet: 'temporal-joins-cheatsheet' });
+    const res = await handleSubscribe(req, env);
+    const body = await res.json();
+    expect(body.status).toBe('existing');
+    expect(capturedBody.fields.lead_magnets).toBe('temporal-joins-cheatsheet');
+  });
+
+  it('preserves email_verified when updating lead magnets', async () => {
+    const sub = senderSubscriber({ email: 'verified@example.com', email_verified: 'yes', lead_magnets: 'temporal-joins-cheatsheet' });
+
+    let capturedBody;
+    vi.stubGlobal('fetch', buildFetchMock([
+      {
+        match: (url) => url.includes('/subscribers?email='),
+        response: { data: [sub] },
+      },
+      {
+        match: (url) => url.match(/\/subscribers\/\d+$/),
+        response: { data: sub },
+      },
+      {
+        match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
+        response: (url, opts) => {
+          capturedBody = JSON.parse(opts.body);
+          return { data: sub };
+        },
+      },
+    ]));
+
+    const req = makeSubscribeRequest({ email: 'verified@example.com', lead_magnet: 'second-cheatsheet' });
+    const res = await handleSubscribe(req, env);
+    const body = await res.json();
+    expect(body.status).toBe('existing');
+    expect(capturedBody.fields.email_verified).toBe('yes');
+  });
+
+  // --- Existing unverified (GET miss → fresh confirmation sent) ---
+
+  it('sends fresh confirmation for unverified subscriber not found via GET', async () => {
+    vi.stubGlobal('fetch', buildFetchMock([
+      // GET search → empty
       {
         match: (url) => url.includes('/subscribers?email='),
         response: { data: [] },
       },
-      // POST probe → returns old subscriber
+      // POST create → success (creates or updates subscriber with fields + automation)
       {
         match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
-        response: { data: { id: 50, email: 'old@example.com', created: oldDate } },
-      },
-      // GET by ID → full data with email_verified: no
-      {
-        match: (url) => url.match(/\/subscribers\/\d+$/),
-        response: { data: sub },
+        response: { data: { id: 50, email: 'old@example.com' } },
       },
     ]));
 
     const req = makeSubscribeRequest({ email: 'old@example.com' });
     const res = await handleSubscribe(req, env);
     const body = await res.json();
-    expect(body.status).toBe('existing_unverified');
+    expect(body.status).toBe('pending_verification');
     expect(body.success).toBe(true);
-    expect(body.redirect_url).toBe('https://kozlov.ski/thank-you/');
-  });
-
-  // --- Existing verified via probe (GET miss, old created, verified) ---
-
-  it('returns existing when probe reveals old verified subscriber', async () => {
-    const oldDate = new Date(Date.now() - 60000).toISOString();
-    const sub = senderSubscriber({ id: 51, email: 'old-verified@example.com', created: oldDate, email_verified: 'yes' });
-
-    vi.stubGlobal('fetch', buildFetchMock([
-      // GET search → empty
-      {
-        match: (url) => url.includes('/subscribers?email='),
-        response: { data: [] },
-      },
-      // POST probe → returns old subscriber
-      {
-        match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
-        response: { data: { id: 51, email: 'old-verified@example.com', created: oldDate } },
-      },
-      // GET by ID → full data with email_verified: yes
-      {
-        match: (url) => url.match(/\/subscribers\/\d+$/),
-        response: { data: sub },
-      },
-    ]));
-
-    const req = makeSubscribeRequest({ email: 'old-verified@example.com' });
-    const res = await handleSubscribe(req, env);
-    const body = await res.json();
-    expect(body.status).toBe('existing');
-    expect(body.redirect_url).toContain('/thank-you/');
   });
 
   // --- Sender.net API error ---
 
   it('returns error when Sender.net create fails', async () => {
-    const now = new Date().toISOString();
     vi.stubGlobal('fetch', buildFetchMock([
       // GET search → empty
       {
         match: (url) => url.includes('/subscribers?email='),
         response: { data: [] },
       },
-      // POST probe → new subscriber
+      // POST create → fail
       {
         match: (url, opts) => opts?.method === 'POST' && url.endsWith('/subscribers'),
-        response: (() => {
-          let callCount = 0;
-          return (url, opts) => {
-            callCount++;
-            if (callCount === 1) {
-              // First POST = probe → new subscriber
-              return { data: { id: 1, email: 'fail@example.com', created: now } };
-            }
-            // Second POST = create → error (handled via status)
-            return { message: 'Rate limited' };
-          };
-        })(),
-        status: (() => {
-          // Need to return different statuses for different calls
-          // This won't work with the simple mock — let's restructure
-        })(),
-      },
-      // GET by ID
-      {
-        match: (url) => url.match(/\/subscribers\/\d+$/),
-        response: { data: senderSubscriber({ id: 1, email: 'fail@example.com', created: now }) },
+        response: { message: 'Rate limited' },
+        status: 429,
       },
     ]));
-
-    // The mock above is too complex for the simple buildFetchMock.
-    // Let's use a custom fetch mock instead.
-    let postCallCount = 0;
-    vi.stubGlobal('fetch', async (url, opts) => {
-      const urlStr = url.toString();
-      if (urlStr.includes('/subscribers?email=')) {
-        return new Response(JSON.stringify({ data: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-      }
-      if (urlStr.match(/\/subscribers\/\d+$/)) {
-        return new Response(JSON.stringify({ data: senderSubscriber({ id: 1, email: 'fail@example.com', created: now }) }), {
-          status: 200, headers: { 'Content-Type': 'application/json' },
-        });
-      }
-      if (opts?.method === 'POST' && urlStr.endsWith('/subscribers')) {
-        postCallCount++;
-        if (postCallCount === 1) {
-          // probe → new
-          return new Response(JSON.stringify({ data: { id: 1, email: 'fail@example.com', created: now } }), {
-            status: 200, headers: { 'Content-Type': 'application/json' },
-          });
-        }
-        // create → fail
-        return new Response(JSON.stringify({ message: 'Rate limited' }), {
-          status: 429, headers: { 'Content-Type': 'application/json' },
-        });
-      }
-      throw new Error(`Unhandled fetch: ${opts?.method || 'GET'} ${urlStr}`);
-    });
 
     const req = makeSubscribeRequest({ email: 'fail@example.com' });
     const res = await handleSubscribe(req, env);

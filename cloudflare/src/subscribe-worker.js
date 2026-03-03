@@ -93,17 +93,8 @@ export async function handleSubscribe(request, env) {
   const incentiveUrl = INCENTIVE_URLS[lead_magnet] || '';
 
   try {
-    const { fields, isExistingUnverified } = await resolveSubscriber(email, env);
+    const { fields } = await resolveSubscriber(email, env);
     const isVerified = fields.email_verified === 'yes';
-
-    if (isExistingUnverified) {
-      return json({
-        success: true,
-        message: "You've already signed up! Please check your inbox (and spam folder) for the confirmation email.",
-        redirect_url: `${CANONICAL_SITE_URL}/thank-you/`,
-        status: 'existing_unverified',
-      });
-    }
 
     if (!isVerified) {
       const confirmToken = await generateConfirmToken(email, lead_magnet, env.CONFIRM_SECRET);
@@ -140,11 +131,12 @@ export async function handleSubscribe(request, env) {
     }
 
     if (lead_magnet) {
-      const existing = (fields.lead_magnets || '').split(',').map((s) => s.trim()).filter((m) => m !== lead_magnet);
+      const existing = (fields.lead_magnets || '').split(',').map((s) => s.trim()).filter((m) => m && m !== lead_magnet);
       existing.push(lead_magnet);
 
       await updateSubscriberFields(email, {
         lead_magnets: existing.join(','),
+        email_verified: 'yes',
       }, env);
 
       return json({

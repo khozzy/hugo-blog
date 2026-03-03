@@ -51,48 +51,19 @@ export async function updateSubscriberFields(email, fields, env) {
   return { ok: accepted, result: data };
 }
 
-// Resolve subscriber state: GET search (fast path), then POST probe (fallback).
-// Returns { fields, isExistingUnverified }.
+// Resolve subscriber state via GET search.
+// Returns { fields }.
 export async function resolveSubscriber(email, env) {
-  let fields = {};
-  let isExistingUnverified = false;
-
   const { data: getResult } = await senderFetch(`/subscribers?email=${encodeURIComponent(email)}`, env);
   const matched = getResult?.data?.find((s) => s.email === email) || null;
 
   if (matched?.id) {
     const subscriber = await fetchSubscriberById(matched.id, env) || matched;
-    fields = parseSubscriberFields(subscriber);
+    const fields = parseSubscriberFields(subscriber);
     console.log('Sender.net resolved via GET:', { email, id: matched.id, fields });
-  } else {
-    // POST probe to create-or-detect subscriber; use `created` timestamp to distinguish
-    const { ok: probeOk, data: probeResult } = await senderFetch('/subscribers', env, {
-      method: 'POST',
-      body: { email, groups: [env.SENDER_GROUP_ID], trigger_automation: true },
-    });
-    const probeId = probeResult?.data?.id;
-    const probeCreated = probeResult?.data?.created;
-
-    if (probeOk && probeId) {
-      const subscriber = await fetchSubscriberById(probeId, env) || probeResult.data;
-      fields = parseSubscriberFields(subscriber);
-
-      const createdMs = probeCreated ? new Date(probeCreated).getTime() : 0;
-      const ageMs = createdMs ? Date.now() - createdMs : Infinity;
-      const isNew = ageMs < 5000;
-
-      if (isNew) {
-        console.log('Sender.net new subscriber via probe:', { email, id: probeId, ageMs, fields });
-      } else {
-        console.log('Sender.net existing subscriber via probe (created', Math.round(ageMs / 1000) + 's ago):', { email, id: probeId, fields });
-        if (fields.email_verified !== 'yes') {
-          isExistingUnverified = true;
-        }
-      }
-    } else {
-      console.log('Sender.net probe:', { email, status: probeResult?.status, result: probeResult });
-    }
+    return { fields };
   }
 
-  return { fields, isExistingUnverified };
+  console.log('Sender.net subscriber not found:', { email });
+  return { fields: {} };
 }
