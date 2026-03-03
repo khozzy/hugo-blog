@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "deploy:secrets": "wrangler secret put SENDER_API_TOKEN && wrangler secret put CONFIRM_SECRET",
     "tail": "wrangler tail",
-    "secret:api-key": "wrangler secret put BEEHIIV_API_KEY",
-    "secret:pub-id": "wrangler secret put BEEHIIV_PUBLICATION_ID"
+    "test": "vitest run"
   },
   "devDependencies": {
+    "vitest": "^4.0.18",
     "wrangler": "^4.0.0"
   }
 }

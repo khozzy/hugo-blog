@@ -1,15 +1,17 @@
-name = "beehiiv-subscribe-proxy"
+name = "sender-subscribe-proxy"
 main = "src/subscribe-worker.js"
 compatibility_date = "2024-01-01"
 
 # Allowed origins for CORS (comma-separated)
 # In production, this should be your actual domain
+
 [vars]
 ALLOWED_ORIGINS = "https://kozlov.ski,http://localhost:1313"
+SENDER_GROUP_ID = "avx1rM"
 
 # Secrets (set via `wrangler secret put`):
-# - BEEHIIV_API_KEY
-# - BEEHIIV_PUBLICATION_ID
+# - SENDER_API_TOKEN
+# - CONFIRM_SECRET (HMAC key for double opt-in tokens: `openssl rand -base64 32`)
 
 [observability]
 enabled = true

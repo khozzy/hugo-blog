@@ -1,326 +1,225 @@
 /**
- * Cloudflare Worker for Beehiiv Newsletter Subscription
+ * Cloudflare Worker for Sender.net Newsletter Subscription
  *
- * This worker acts as a secure proxy to the Beehiiv API, keeping the API key
- * server-side while allowing form submissions from the blog.
+ * Secure proxy to the Sender.net API — keeps the API token server-side
+ * while allowing form submissions from the blog.
  *
- * Environment variables (set via wrangler secret):
- * - BEEHIIV_API_KEY: Your Beehiiv API key
- * - BEEHIIV_PUBLICATION_ID: Your Beehiiv publication ID
+ * Implements self-built double opt-in: new subscribers receive a
+ * cryptographically signed confirmation link via Sender.net automation.
  *
- * Environment variables (set in wrangler.toml):
- * - ALLOWED_ORIGINS: Comma-separated list of allowed origins
+ * Environment variables (wrangler secret): SENDER_API_TOKEN, CONFIRM_SECRET
+ * Environment variables (wrangler.toml):   ALLOWED_ORIGINS, SENDER_GROUP_ID
  */
 
-const BEEHIIV_API_URL = 'https://api.beehiiv.com/v2';
-const CANONICAL_SITE_URL = 'https://kozlov.ski';
-const GENERIC_THANK_YOU_PATH = '/thank-you/';
+import { generateConfirmToken, validateConfirmToken } from './crypto.js';
+import { senderFetch, resolveSubscriber, updateSubscriberFields } from './sender.js';
 
-// These URLs are intended for downstream Beehiiv merge tags / automations.
+export const CANONICAL_SITE_URL = 'https://kozlov.ski';
+const CONFIRM_BASE_URL = 'https://api.kozlov.ski/confirm';
+
 const INCENTIVE_URLS = {
   'temporal-joins-cheatsheet': `${CANONICAL_SITE_URL}/thank-you/temporal-joins-cheatsheet/`,
 };
 
-const CAMPAIGN_INCENTIVE_URLS = {};
-
-function getAllowedOrigins(allowedOrigins) {
-  return (allowedOrigins || '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-}
-
-function escapeRegex(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function parseUrl(value) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    return new URL(value);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Check if the origin is allowed
- */
-function isOriginAllowed(origin, allowedOrigins) {
-  if (!origin) return false;
-  return getAllowedOrigins(allowedOrigins).some((allowed) => {
-    if (allowed.includes('*')) {
-      const pattern = new RegExp('^' + escapeRegex(allowed).replace(/\\\*/g, '.*') + '$');
-      return pattern.test(origin);
-    }
-    return origin === allowed;
+function errorPage(message) {
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirmation Error</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#f9fafb}
+.card{max-width:420px;padding:2rem;text-align:center;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+h1{font-size:1.25rem;color:#991b1b}p{color:#6b7280;line-height:1.6}
+a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}</style>
+</head><body><div class="card"><h1>Confirmation Failed</h1><p>${message}</p>
+<p><a href="${CANONICAL_SITE_URL}">Back to kozlov.ski</a></p></div></body></html>`;
+  return new Response(html, {
+    status: 400,
+    headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
 }
 
-/**
- * Create CORS headers
- */
-function getCorsHeaders(origin, allowedOrigins) {
+export function corsHeaders(origin, allowedOrigins) {
+  const allowed = new Set(allowedOrigins.split(',').map((s) => s.trim()));
   const headers = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
   };
-
-  if (isOriginAllowed(origin, allowedOrigins)) {
+  if (allowed.has(origin)) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
-
-  return headers;
+  return { headers, originAllowed: allowed.has(origin) };
 }
 
-/**
- * Validate email address
- */
-function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+export function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function getSuccessRedirectUrl(origin, pageUrl, allowedOrigins) {
-  if (isOriginAllowed(origin, allowedOrigins)) {
-    return new URL(GENERIC_THANK_YOU_PATH, origin).toString();
-  }
-
-  const parsedPageUrl = parseUrl(pageUrl);
-  if (parsedPageUrl && isOriginAllowed(parsedPageUrl.origin, allowedOrigins)) {
-    return new URL(GENERIC_THANK_YOU_PATH, parsedPageUrl.origin).toString();
-  }
-
-  return new URL(GENERIC_THANK_YOU_PATH, CANONICAL_SITE_URL).toString();
-}
-
-function getIncentiveUrl(leadMagnet, campaign) {
-  if (leadMagnet && INCENTIVE_URLS[leadMagnet]) {
-    return INCENTIVE_URLS[leadMagnet];
-  }
-
-  if (campaign && CAMPAIGN_INCENTIVE_URLS[campaign]) {
-    return CAMPAIGN_INCENTIVE_URLS[campaign];
-  }
-
-  return '';
-}
-
-function buildCustomFields(leadMagnet, campaign) {
-  const customFields = [];
-  const welcomeVariant = leadMagnet || campaign || 'newsletter';
-  const incentiveUrl = getIncentiveUrl(leadMagnet, campaign);
-
-  if (leadMagnet) {
-    customFields.push({
-      name: 'lead_magnet',
-      value: leadMagnet,
-    });
-  }
-
-  if (campaign) {
-    customFields.push({
-      name: 'signup_campaign',
-      value: campaign,
-    });
-  }
-
-  customFields.push({
-    name: 'signup_source',
-    value: 'website',
-  });
-
-  customFields.push({
-    name: 'welcome_variant',
-    value: welcomeVariant,
-  });
-
-  if (incentiveUrl) {
-    customFields.push({
-      name: 'incentive_url',
-      value: incentiveUrl,
-    });
-  }
-
-  return customFields;
-}
-
-async function parseJsonResponse(response) {
-  const text = await response.text();
-
-  if (!text) {
-    return {};
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { message: text };
-  }
-}
-
-function getBeehiivError(result) {
-  return result?.errors?.[0]?.message || result?.message || 'Subscription failed';
-}
-
-/**
- * Handle OPTIONS preflight request
- */
 function handleOptions(request, env) {
   const origin = request.headers.get('Origin');
-  return new Response(null, {
-    status: 204,
-    headers: getCorsHeaders(origin, env.ALLOWED_ORIGINS),
-  });
+  const { headers } = corsHeaders(origin, env.ALLOWED_ORIGINS);
+  return new Response(null, { status: 204, headers });
 }
 
-/**
- * Handle POST subscription request
- */
-async function handleSubscribe(request, env) {
+export async function handleSubscribe(request, env) {
   const origin = request.headers.get('Origin');
-  const corsHeaders = getCorsHeaders(origin, env.ALLOWED_ORIGINS);
+  const { headers: cors, originAllowed } = corsHeaders(origin, env.ALLOWED_ORIGINS);
+  const json = (body) => new Response(JSON.stringify(body), {
+    headers: { 'Content-Type': 'application/json', ...cors },
+  });
+  const jsonError = (error, status) => new Response(JSON.stringify({ error }), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...cors },
+  });
 
-  // Check origin
-  if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS)) {
-    return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
-      status: 403,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+  if (!originAllowed) {
+    return jsonError('Origin not allowed', 403);
   }
 
-  // Parse request body
   let body;
   try {
     body = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+    return jsonError('Invalid JSON body', 400);
   }
 
-  const { email, campaign, lead_magnet, page_url } = body;
+  const { email, lead_magnet } = body;
 
-  // Validate email
   if (!email || !isValidEmail(email)) {
-    return new Response(JSON.stringify({ error: 'Invalid email address' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
+    return jsonError('Invalid email address', 400);
   }
 
-  // Build Beehiiv API payload
-  const payload = {
-    email: email,
-    reactivate_existing: false,
-    send_welcome_email: true,
-    double_opt_override: 'on',
-  };
+  const incentiveUrl = INCENTIVE_URLS[lead_magnet] || '';
 
-  // Add UTM parameters
-  if (campaign) {
-    payload.utm_source = 'website';
-    payload.utm_medium = 'subscribe_form';
-    payload.utm_campaign = campaign;
-  }
-
-  // Add referring URL
-  if (page_url) {
-    payload.referring_site = page_url;
-  }
-
-  const customFields = buildCustomFields(lead_magnet, campaign);
-  if (customFields.length > 0) {
-    payload.custom_fields = customFields;
-  }
-
-  // Call Beehiiv API
   try {
-    const redirectUrl = getSuccessRedirectUrl(origin, page_url, env.ALLOWED_ORIGINS);
-    const response = await fetch(
-      `${BEEHIIV_API_URL}/publications/${env.BEEHIIV_PUBLICATION_ID}/subscriptions`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${env.BEEHIIV_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const { fields, isExistingUnverified } = await resolveSubscriber(email, env);
+    const isVerified = fields.email_verified === 'yes';
 
-    const result = await parseJsonResponse(response);
-    console.log('Beehiiv subscribe result:', {
-      status: response.status,
-      beehiivStatus: result?.data?.status,
-    });
-
-    if (!response.ok) {
-      console.error('Beehiiv API error:', result);
-      return new Response(
-        JSON.stringify({
-          error: getBeehiivError(result),
-        }),
-        {
-          status: response.status,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        }
-      );
+    if (isExistingUnverified) {
+      return json({
+        success: true,
+        message: "You've already signed up! Please check your inbox (and spam folder) for the confirmation email.",
+        status: 'existing_unverified',
+      });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Check your email to confirm your subscription.',
-        redirect_url: redirectUrl,
-        status: result?.data?.status,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    if (!isVerified) {
+      const confirmToken = await generateConfirmToken(email, lead_magnet, env.CONFIRM_SECRET);
+      const confirmUrl = `${CONFIRM_BASE_URL}?token=${confirmToken}`;
+
+      const { ok: createOk, status: createStatus, data: createResult } = await senderFetch('/subscribers', env, {
+        method: 'POST',
+        body: {
+          email,
+          groups: [env.SENDER_GROUP_ID],
+          trigger_automation: true,
+          fields: {
+            email_verified: 'no',
+            confirmation_url: confirmUrl,
+            ...(lead_magnet && { lead_magnets: lead_magnet }),
+          },
+        },
+      });
+
+      if (!createOk) {
+        const error = createResult?.message
+          || (createResult?.errors && Object.values(createResult.errors).flat()[0])
+          || 'Subscription failed';
+        console.error('Sender.net API error:', createResult);
+        return jsonError(error, createStatus);
       }
-    );
+
+      return json({
+        success: true,
+        message: 'Almost there! Check your inbox and click the confirmation link to complete your subscription.',
+        status: 'pending_verification',
+      });
+    }
+
+    if (lead_magnet) {
+      const existing = (fields.lead_magnets || '').split(',').map((s) => s.trim()).filter((m) => m !== lead_magnet);
+      existing.push(lead_magnet);
+
+      await updateSubscriberFields(email, {
+        lead_magnets: existing.join(','),
+      }, env);
+
+      return json({
+        success: true,
+        message: 'Welcome back! Your download is ready.',
+        redirect_url: incentiveUrl || `${CANONICAL_SITE_URL}/thank-you/`,
+        status: 'existing',
+      });
+    }
+
+    return json({
+      success: true,
+      message: "You're already subscribed!",
+      redirect_url: `${CANONICAL_SITE_URL}/thank-you/`,
+      status: 'existing',
+    });
   } catch (error) {
     console.error('Worker error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'An error occurred. Please try again.',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      }
-    );
+    return jsonError('An error occurred. Please try again.', 500);
   }
 }
 
-/**
- * Main request handler
- */
+export async function handleConfirm(request, env) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token');
+
+  if (!token) {
+    return errorPage('Missing confirmation token. Please use the link from your email.');
+  }
+
+  const result = await validateConfirmToken(token, env.CONFIRM_SECRET);
+  if (!result) {
+    return errorPage('This confirmation link is invalid or has expired. Please subscribe again to receive a new link.');
+  }
+
+  const { email, leadMagnet } = result;
+  const incentiveUrl = INCENTIVE_URLS[leadMagnet] || '';
+
+  try {
+    const confirmFields = {
+      email_verified: 'yes',
+      confirmation_url: '',
+    };
+
+    console.log('Sender.net confirm:', { email, leadMagnet, fields: confirmFields });
+
+    const { ok: confirmOk, result: confirmResult } = await updateSubscriberFields(email, confirmFields, env);
+
+    if (!confirmOk) {
+      console.error('Sender.net update error on confirm:', confirmResult);
+      return errorPage('Something went wrong confirming your email. Please try again.');
+    }
+
+    const redirectUrl = incentiveUrl || `${CANONICAL_SITE_URL}/thank-you/confirmed/`;
+    return Response.redirect(redirectUrl, 302);
+  } catch (error) {
+    console.error('Confirm handler error:', error);
+    return errorPage('An unexpected error occurred. Please try again.');
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Only handle /subscribe endpoint
-    if (url.pathname !== '/subscribe') {
-      return new Response('Not Found', { status: 404 });
+    if (url.pathname === '/confirm' && request.method === 'GET') {
+      return handleConfirm(request, env);
     }
 
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return handleOptions(request, env);
+    if (url.pathname === '/subscribe') {
+      if (request.method === 'OPTIONS') {
+        return handleOptions(request, env);
+      }
+      if (request.method === 'POST') {
+        return handleSubscribe(request, env);
+      }
+      return new Response('Method Not Allowed', { status: 405 });
     }
 
-    // Handle subscription POST
-    if (request.method === 'POST') {
-      return handleSubscribe(request, env);
-    }
-
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response('Not Found', { status: 404 });
   },
 };
