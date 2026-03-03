@@ -79,8 +79,8 @@ helm repo update
 
 With these repositories configured, we can install the services.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/rqgdwj"
+{{< subscribe
+    lead_magnet="mautic-deployment-guide"
     headline="Get the Deployment Guide"
     description="7-checkpoint checklist with all Helm values files for MariaDB, Mailhog, and Mautic. Copy-paste ready YAML configs included."
     button="Download Free"
@@ -421,8 +421,8 @@ For production use:
 
 The operational overhead is real, but if you need tight integration between marketing automation and your data platform, self-hosting gives you options that SaaS vendors simply don't offer.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/rqgdwj"
+{{< subscribe
+    lead_magnet="mautic-deployment-guide"
     headline="Get the Mautic K8s Starter Kit"
     description="Complete deployment guide plus 5 ready-to-use YAML files: MariaDB values, Mailhog values, Mautic values, NodePort service, and favicon ConfigMap."
     button="Download Free"

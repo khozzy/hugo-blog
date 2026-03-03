@@ -4,17 +4,12 @@ slug: demand-forecast-eda
 date: 2026-02-25T08:00:00+01:00
 lastmod: 2026-02-25T08:00:00+01:00
 author: Norbert
-draft: true
 summary: "A client handed me 1.5M rows of POS data and asked for daily demand forecasts. EDA revealed 66% of series were lumpy and unforecastable — before we trained a single model. Here's the complete analysis from a data engineer with 15 years of experience and a Ph.D. in AI."
 params:
   toc: true
 tags:
   - Data Engineering
   - Machine Learning
-  - Demand Forecasting
-  - Exploratory Data Analysis
-  - Retail Analytics
-  - Time Series
 ---
 
 A client handed me 1.5 million rows of point-of-sale data from a pet retail chain. ~60 stores, 20,000+ products, a full year of transactions. The ask was straightforward: build daily demand forecasts.
@@ -121,8 +116,8 @@ A few examples:
 
 None of these are bugs. They're the reality of how a multi-store retail operation uses its POS day-to-day. But they're invisible if you skip EDA and feed the CSV straight into AutoML. SageMaker would happily treat inventory adjustments as demand signals and manual price overrides as price drops. The resulting forecasts would be confidently wrong.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/TODO"
+{{< subscribe
+    lead_magnet="demand-forecast-eda"
     headline="Run These 8 Checks Before You Train a Single Model"
     description="The exact EDA checklist from this post — duplicate keys, pricing identity, store coverage, intermittency classification — as a step-by-step PDF runbook you can apply to your own dataset. Takes 30 minutes. Could save you months."
     button="Download Free"
@@ -217,8 +212,8 @@ When I classified the ~199K store-item pairs, the results were stark and surpris
 
 Two-thirds of all store-item combinations were **lumpy** — selling rarely AND in unpredictable quantities when they did sell. The remaining third was **smooth**. The middle quadrants (erratic and intermittent) were virtually empty. This dataset didn't have a spectrum of demand patterns. It had two modes: items that sell predictably, and items that barely sell at all.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/TODO"
+{{< subscribe
+    lead_magnet="demand-forecast-eda"
     headline="Classify Your Own Demand Patterns"
     description="Jupyter notebook with the full SBC classification pipeline: zero-share analysis, ADI/CV² computation, Syntetos-Boylan quadrant plot, and Lorenz curve. Runs on included sample data — swap in your own CSV and go."
     button="Download Free"
@@ -278,8 +273,8 @@ The static covariates — brand, category, store hierarchy — become more usefu
 
 The Syntetos-Boylan Classification gave us a clean split: 33.6% smooth, 66.3% lumpy. The smooth items can use standard methods — and since they drive 80% of volume, that covers most of the revenue. The lumpy items need ADIDA or should be aggregated to a higher hierarchy. SageMaker's DeepAR can technically handle zeros, but it's overkill when the demand pattern is structurally intermittent rather than complex — and it won't outperform purpose-built intermittent demand methods on this type of data.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/TODO"
+{{< subscribe
+    lead_magnet="demand-forecast-eda"
     headline="Get the Complete Demand Forecasting EDA Toolkit"
     description="Everything from this post packaged for your next project: the 8-check EDA runbook (PDF), the SBC classification notebook (Jupyter), and a one-page method decision flowchart — which forecasting model to use for smooth, erratic, intermittent, and lumpy demand."
     button="Download Free"
@@ -303,8 +298,8 @@ For lumpy demand — products that sell rarely and in unpredictable quantities �
 
 For most retail products, weekly forecasting outperforms daily. Daily demand for long-tail items is a stream of zeros with occasional ones — models can't learn meaningful patterns from that signal. Weekly aggregation compresses the sparsity and aligns with actual replenishment cycles. An item selling 7 times in 133 days becomes ~0.37/week rather than ~0.05/day — still sparse, but meaningfully different from zero in more periods.
 
-{{< gumroad
-    url="https://nkozlovski.gumroad.com/l/TODO"
+{{< subscribe
+    lead_magnet="demand-forecast-eda"
     headline="Get the Complete Demand Forecasting EDA Toolkit"
     description="Everything from this post packaged for your next project: the 8-check EDA runbook (PDF), the SBC classification notebook (Jupyter), and a one-page method decision flowchart — which forecasting model to use for smooth, erratic, intermittent, and lumpy demand."
     button="Download Free"

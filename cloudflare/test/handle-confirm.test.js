@@ -145,6 +145,6 @@ describe('handleConfirm', () => {
     expect(capturedBody.fields.email_verified).toBe('yes');
     expect(capturedBody.fields.confirmation_url).toBe('');
     expect(capturedBody.fields.send_incentive).toBeUndefined();
-    expect(capturedBody.trigger_automation).toBe(false);
+    expect(capturedBody.trigger_automation).toBe(true);
   });
 });
