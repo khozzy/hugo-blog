@@ -45,7 +45,7 @@ async function fetchSubscriberById(id, env) {
 export async function updateSubscriberFields(email, fields, env) {
   const { ok, status, data } = await senderFetch('/subscribers', env, {
     method: 'POST',
-    body: { email, fields, groups: [env.SENDER_GROUP_ID], trigger_automation: false },
+    body: { email, fields, groups: [env.SENDER_GROUP_ID], trigger_automation: true },
   });
   const accepted = ok || status === 422;
   return { ok: accepted, result: data };
@@ -68,7 +68,7 @@ export async function resolveSubscriber(email, env) {
     // POST probe to create-or-detect subscriber; use `created` timestamp to distinguish
     const { ok: probeOk, data: probeResult } = await senderFetch('/subscribers', env, {
       method: 'POST',
-      body: { email, groups: [env.SENDER_GROUP_ID], trigger_automation: false },
+      body: { email, groups: [env.SENDER_GROUP_ID], trigger_automation: true },
     });
     const probeId = probeResult?.data?.id;
     const probeCreated = probeResult?.data?.created;
