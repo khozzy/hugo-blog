@@ -80,6 +80,7 @@ describe('handleSubscribe', () => {
     const body = await res.json();
     expect(body.status).toBe('pending_verification');
     expect(body.success).toBe(true);
+    expect(body.redirect_url).toBe('https://kozlov.ski/thank-you/');
   });
 
   // --- Existing verified subscriber found via GET ---
@@ -224,6 +225,7 @@ describe('handleSubscribe', () => {
     const body = await res.json();
     expect(body.status).toBe('existing_unverified');
     expect(body.success).toBe(true);
+    expect(body.redirect_url).toBe('https://kozlov.ski/thank-you/');
   });
 
   // --- Existing verified via probe (GET miss, old created, verified) ---

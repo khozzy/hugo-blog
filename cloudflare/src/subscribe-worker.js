@@ -19,6 +19,8 @@ const CONFIRM_BASE_URL = 'https://api.kozlov.ski/confirm';
 
 const INCENTIVE_URLS = {
   'temporal-joins-cheatsheet': `${CANONICAL_SITE_URL}/thank-you/temporal-joins-cheatsheet/`,
+  'mautic-deployment-guide': `${CANONICAL_SITE_URL}/thank-you/mautic-deployment-guide/`,
+  'demand-forecast-eda': `${CANONICAL_SITE_URL}/thank-you/demand-forecast-eda/`,
 };
 
 function errorPage(message) {
@@ -98,6 +100,7 @@ export async function handleSubscribe(request, env) {
       return json({
         success: true,
         message: "You've already signed up! Please check your inbox (and spam folder) for the confirmation email.",
+        redirect_url: `${CANONICAL_SITE_URL}/thank-you/`,
         status: 'existing_unverified',
       });
     }
@@ -131,6 +134,7 @@ export async function handleSubscribe(request, env) {
       return json({
         success: true,
         message: 'Almost there! Check your inbox and click the confirmation link to complete your subscription.',
+        redirect_url: `${CANONICAL_SITE_URL}/thank-you/`,
         status: 'pending_verification',
       });
     }

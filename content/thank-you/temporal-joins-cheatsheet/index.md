@@ -12,10 +12,10 @@ params:
     downloads:
       - name: "Temporal Joins Cheat Sheet (PDF)"
         description: "All 12 temporal join patterns on a single page"
-        url: "https://r2.kozlov.ski/incentives/temporal-joins-cheatsheet/temporal-joins-cheatsheet.pdf"
+        url: "temporal-joins-cheatsheet.pdf"
         icon: "fas fa-file-pdf"
       - name: "SQL Examples (ZIP)"
         description: "Ready-to-run SQL scripts for each pattern"
-        url: "https://r2.kozlov.ski/incentives/temporal-joins-cheatsheet/temporal-joins-cheatsheet.zip"
+        url: "temporal-joins-cheatsheet.zip"
         icon: "fas fa-file-archive"
 ---
