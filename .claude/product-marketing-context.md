@@ -6,7 +6,7 @@
 **One-liner:** First-principles data engineering blog that helps senior engineers make better architectural decisions.
 **What it does:** kozlov.ski publishes deep-dive technical articles on data engineering, data modeling, and ML — grounded in real-world projects, not toy examples. Each post provides mental models and decision frameworks that help engineers think at a Staff/Principal level about data architecture.
 **Product category:** Technical blog / engineering publication (how people find it: "data engineering blog", "data architecture deep-dives")
-**Product type:** Content-led personal brand with lead magnets (free resources via Gumroad), email list (Beehiiv), and future paid products.
+**Product type:** Content-led personal brand with lead magnets (free resources via Gumroad), email list (Sender.net), and future paid products.
 **Business model:** Currently free content → email list growth → lead magnets → future paid product (TBD). Monetization through Gumroad digital products and eventual course/product launch.
 
 ## Target Audience

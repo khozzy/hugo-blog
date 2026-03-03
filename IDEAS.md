@@ -5,7 +5,7 @@
 - Structuring multi-tenant dbt projects
 - Unified Star Schema modelling explained
 - Zach Wilson excerpts
-- User Segmentation
+- User Segmentation (OBT model)
 
 
 ## Analytics
@@ -128,7 +128,7 @@
         Your analysis
 
   Custom (later):
-  Your form → captures email → sends to Beehiiv
+  Your form → captures email → sends to Segment.net
            → logs to Supabase
            → redirects to R2 signed URL
            → R2 Worker logs download completion
@@ -160,8 +160,8 @@
       ↓
   Gumroad ($0 product) → captures email, delivers PDF
       ↓
-  Zapier/webhook → adds to Beehiiv with tag "mautic-guide"
+  Zapier/webhook → adds to Segment.net with tag "mautic-guide"
       ↓
-  Beehiiv automation → welcome sequence
+  Segment.net automation → welcome sequence
 
   You get: gated downloads with analytics (Gumroad), proper email marketing (Beehiiv), data sync between them.

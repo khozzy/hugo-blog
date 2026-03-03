@@ -21,12 +21,6 @@ I'm **Norbert Kozlowski**, a data engineer with 15 years of experience building 
 
 First principles thinking applied to data engineering. I focus on depth that helps engineers make better architectural decisions and develop Staff/Principal-level thinking.
 
-## Current Projects
-
-- **[Project Name]** - [Brief description of the project and what problem it solves]
-- **[Project Name]** - [Brief description of the project and what problem it solves]
-- **[Newsletter/Blog Name]** - [Brief description of content focus and publishing cadence]
-
 ## Connect
 
 - [LinkedIn](https://www.linkedin.com/in/norbert-kozlowski)

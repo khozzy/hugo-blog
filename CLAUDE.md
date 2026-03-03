@@ -43,7 +43,8 @@ Use these to differentiate from generic content:
 ## Platforms I Use
 
 - **Blog**: https://kozlov.ski (Hugo)
-- Gumroad (monetization, incentive distribution), Beehiiv (optional newsletter)
+- Newsletter, email collection: Segment.net
+- Gumroad (monetization, paid incentive distribution)
 - LinkedIn (primary), X - social distribution
 
 ## Content Guidelines
@@ -148,7 +149,7 @@ Located in `layouts/shortcodes/`:
       button="Download Free"
   >}}
   ```
-- **subscribe**: Inline email capture form (Beehiiv integration)
+- **subscribe**: Inline email capture form (Segment.net integration)
 
 ## Others
 - Existing posts are located in `content/posts` directory.

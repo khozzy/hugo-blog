@@ -64,7 +64,6 @@ Link to a Gumroad product in blog posts:
 2. Build: `just incentive <slug>`
 3. Upload PDF to Gumroad ($0 product)
 4. Add shortcode to blog post with Gumroad URL
-5. Gumroad → Beehiiv webhook syncs subscribers
 
 ## Subscribe Shortcode (Email Capture)
 
