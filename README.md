@@ -93,3 +93,7 @@ params:
 [ ] Dark mode
 [ ] Content review skill (roast, gaps)
 [ ] SEO agent/skill
+
+## Test PR marker
+
+This line was added by an automated test PR on 2026-03-06 to verify GitHub workflow and PR permissions.
