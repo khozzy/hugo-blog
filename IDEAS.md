@@ -1,5 +1,44 @@
 # Future Content Ideas
 
+## Data Contracts in Practice — Garmin as a Producer You Don't Control
+
+**Teza (evergreen):** Twój schema to API. Ingestion layer nie blokuje — obserwuje i routuje. Kontrakt egzekwujesz w transformacji.
+
+**Unique angle:** Większość postów opisuje *co to data contract*. Ten pokazuje *jak to działa rekord po rekordzie* na producencie którego nie kontrolujesz (Garmin API — zmienia format przy firmware update bez ostrzeżenia).
+
+**Stack:**
+- `python-garminconnect` — pull danych z Garmin Connect
+- `dlt` — ingestion + routing (Pydantic + `mark.with_table_name`)
+- `DuckDB` — lokalny storage, zero infrastruktury
+- `dbt-duckdb` — transformacje + model contracts w YAML
+- `cron` — orchestration, bez przeprosin
+
+**Architektura:**
+```
+Garmin API
+    ↓
+  dlt + Pydantic       ← walidacja per-rekord
+    ↓                        ↓
+activities (freeze)     quarantine (evolve)
+    ↓
+  dbt staging           ← HARD CONTRACT (YAML)
+    ↓
+  dbt marts → analytics
+```
+
+**Dwa kontrakty, dwie granice zaufania:**
+1. `dlt` + Pydantic — "czy producent dał mi poprawny rekord?"
+2. `dbt` model contract — "czy moja transformacja daje to czego chce downstream?"
+
+**Villain story:** Garmin robi firmware update → nowe/zmienione pole w JSON → dlt routuje rekord do quarantine (nie traci danych) → backfill możliwy gdy kontrakt zaktualizowany.
+
+**Key insight dla czytelnika:** Ingestion layer nigdy nie powinien być gatekeeper — tylko obserwator. `discard_row` to antywzorzec — tracisz dane i musisz backfillować z zewnętrznego źródła. Routuj do quarantine, miej pełny obraz.
+
+**Powiązane trendy (NocoDB):** Data Contracts (Lindy Score 5/5), Apache Iceberg
+
+---
+
+
 - Data Model For User Growth Analytics (growth accounting)
   - https://github.com/DataExpert-io/data-engineer-handbook/blob/main/intermediate-bootcamp/materials/4-applying-analytical-patterns/lecture-lab/growth_accounting.sql
 - Structuring multi-tenant dbt projects
