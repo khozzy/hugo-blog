@@ -2,39 +2,39 @@
 
 ## Data Contracts in Practice — Garmin as a Producer You Don't Control
 
-**Teza (evergreen):** Twój schema to API. Ingestion layer nie blokuje — obserwuje i routuje. Kontrakt egzekwujesz w transformacji.
+**Core thesis (evergreen):** Your schema is an API. The ingestion layer doesn't block — it observes and routes. You enforce the contract at the transformation layer.
 
-**Unique angle:** Większość postów opisuje *co to data contract*. Ten pokazuje *jak to działa rekord po rekordzie* na producencie którego nie kontrolujesz (Garmin API — zmienia format przy firmware update bez ostrzeżenia).
+**Unique angle:** Most posts explain *what a data contract is*. This one shows *how it works record by record* against a producer you don't control — Garmin silently changes its API response format on firmware updates.
 
 **Stack:**
-- `python-garminconnect` — pull danych z Garmin Connect
-- `dlt` — ingestion + routing (Pydantic + `mark.with_table_name`)
-- `DuckDB` — lokalny storage, zero infrastruktury
-- `dbt-duckdb` — transformacje + model contracts w YAML
-- `cron` — orchestration, bez przeprosin
+- `python-garminconnect` — pull data from Garmin Connect
+- `dlt` — ingestion + conditional routing (Pydantic + `mark.with_table_name`)
+- `DuckDB` — local warehouse, zero infrastructure
+- `dbt-duckdb` — transformations + model contracts enforced in YAML
+- `cron` — orchestration, no apologies
 
-**Architektura:**
+**Architecture:**
 ```
 Garmin API
     ↓
-  dlt + Pydantic       ← walidacja per-rekord
+  dlt + Pydantic       ← per-record validation
     ↓                        ↓
 activities (freeze)     quarantine (evolve)
     ↓
-  dbt staging           ← HARD CONTRACT (YAML)
+  dbt staging           ← hard contract enforcement (YAML)
     ↓
   dbt marts → analytics
 ```
 
-**Dwa kontrakty, dwie granice zaufania:**
-1. `dlt` + Pydantic — "czy producent dał mi poprawny rekord?"
-2. `dbt` model contract — "czy moja transformacja daje to czego chce downstream?"
+**Two contracts, two trust boundaries:**
+1. `dlt` + Pydantic — "did the producer give me a valid record?"
+2. `dbt` model contract — "does my transformation produce what downstream expects?"
 
-**Villain story:** Garmin robi firmware update → nowe/zmienione pole w JSON → dlt routuje rekord do quarantine (nie traci danych) → backfill możliwy gdy kontrakt zaktualizowany.
+**Villain story:** Garmin ships a firmware update → new or renamed field in the JSON response → dlt routes the record to quarantine instead of failing the pipeline → zero data loss → backfill when the contract is updated.
 
-**Key insight dla czytelnika:** Ingestion layer nigdy nie powinien być gatekeeper — tylko obserwator. `discard_row` to antywzorzec — tracisz dane i musisz backfillować z zewnętrznego źródła. Routuj do quarantine, miej pełny obraz.
+**Key insight:** The ingestion layer should never be a gatekeeper — only an observer. Using `discard_row` is an antipattern: you lose data and need to backfill from an external source that may no longer be available. Route to quarantine, keep the full picture.
 
-**Powiązane trendy (NocoDB):** Data Contracts (Lindy Score 5/5), Apache Iceberg
+**Related trends:** Data Contracts (Lindy Score 5/5), Apache Iceberg
 
 ---
 
