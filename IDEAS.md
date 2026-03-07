@@ -1,5 +1,44 @@
 # Future Content Ideas
 
+## Data Contracts in Practice — Garmin as a Producer You Don't Control
+
+**Core thesis (evergreen):** Your schema is an API. The ingestion layer doesn't block — it observes and routes. You enforce the contract at the transformation layer.
+
+**Unique angle:** Most posts explain *what a data contract is*. This one shows *how it works record by record* against a producer you don't control — Garmin silently changes its API response format on firmware updates.
+
+**Stack:**
+- `python-garminconnect` — pull data from Garmin Connect
+- `dlt` — ingestion + conditional routing (Pydantic + `mark.with_table_name`)
+- `DuckDB` — local warehouse, zero infrastructure
+- `dbt-duckdb` — transformations + model contracts enforced in YAML
+- `cron` — orchestration, no apologies
+
+**Architecture:**
+```
+Garmin API
+    ↓
+  dlt + Pydantic       ← per-record validation
+    ↓                        ↓
+activities (freeze)     quarantine (evolve)
+    ↓
+  dbt staging           ← hard contract enforcement (YAML)
+    ↓
+  dbt marts → analytics
+```
+
+**Two contracts, two trust boundaries:**
+1. `dlt` + Pydantic — "did the producer give me a valid record?"
+2. `dbt` model contract — "does my transformation produce what downstream expects?"
+
+**Villain story:** Garmin ships a firmware update → new or renamed field in the JSON response → dlt routes the record to quarantine instead of failing the pipeline → zero data loss → backfill when the contract is updated.
+
+**Key insight:** The ingestion layer should never be a gatekeeper — only an observer. Using `discard_row` is an antipattern: you lose data and need to backfill from an external source that may no longer be available. Route to quarantine, keep the full picture.
+
+**Related trends:** Data Contracts (Lindy Score 5/5), Apache Iceberg
+
+---
+
+
 - Data Model For User Growth Analytics (growth accounting)
   - https://github.com/DataExpert-io/data-engineer-handbook/blob/main/intermediate-bootcamp/materials/4-applying-analytical-patterns/lecture-lab/growth_accounting.sql
 - Structuring multi-tenant dbt projects
